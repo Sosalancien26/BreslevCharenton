@@ -304,6 +304,7 @@
     }
   });
   const MOTIFS = ['Kippour', 'Yahrzeit', 'Sefer Torah', 'Mitsva', 'Tsedaka', 'Roch Hachana', 'Pessah', 'Souccot', 'Bar Mitsva', 'Hanouka', 'Pourim', 'Général', 'Autre'];
+  const MOYENS_PAIEMENT = ['Carte bleue', 'Virement', 'Espèces', 'Chèque', 'Prélèvement', 'Autre'];
 
   /* ====================== ICÔNES (Lucide, intégrées) ====================== */
   const ICONS = {
@@ -347,7 +348,13 @@
     info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
     'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
     'phone-call': '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
-    menu: '<line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/>'
+    menu: '<line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/>',
+    'credit-card': '<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
+    'file-text': '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+    'file-check': '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/>',
+    upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
+    'external-link': '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+    history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>'
   };
   function Icon({
     name,
@@ -506,56 +513,92 @@
   }
 
   /* ====================== FLAMME (SVG ORIGINAL) ====================== */
+  /* Flamme multi-langues "Aesh Sheli" — pétales superposés */
+  const FLAME_PETAL = 'M0 -1 C 0.18 -0.66, 0.5 -0.4, 0.5 -0.15 C 0.5 0.03, 0.33 0.13, 0 0.14 C -0.33 0.13, -0.5 0.03, -0.5 -0.15 C -0.5 -0.4, -0.18 -0.66, 0 -1 Z';
+  const FLAME_BACK = [[140, 326, 0, 150, 180], [98, 318, -24, 80, 158], [118, 322, -11, 96, 240], [140, 324, -1, 104, 320], [164, 322, 12, 94, 250], [184, 318, 25, 78, 170]];
+  const FLAME_INNER = [[124, 324, -9, 60, 170], [142, 326, 2, 70, 248], [160, 324, 11, 58, 188]];
+  const FLAME_CORE = [143, 325, 2, 38, 150];
+  function tongueTransform(t) {
+    return 'translate(' + t[0] + ' ' + t[1] + ') rotate(' + t[2] + ') scale(' + t[3] + ' ' + t[4] + ')';
+  }
   function Flame({
     size = 96,
     className = '',
     animated = false
   }) {
+    const [uid] = useState(() => 'fl' + Math.random().toString(36).slice(2, 8));
+    const gw = uid + 'w',
+      gi = uid + 'i';
     return /*#__PURE__*/React.createElement("svg", {
       width: size,
       height: size,
-      viewBox: "0 0 320 400",
+      viewBox: "0 0 280 380",
       className: cx(className, animated && 'flame-anim'),
       "aria-hidden": "true"
     }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
-      id: "fl-gold",
-      x1: "0.3",
+      id: gw,
+      x1: "0.5",
       y1: "1",
-      x2: "0.66",
-      y2: "0.05"
+      x2: "0.5",
+      y2: "0"
     }, /*#__PURE__*/React.createElement("stop", {
       offset: "0",
-      stopColor: "#a9823f"
+      stopColor: "#b8320a"
     }), /*#__PURE__*/React.createElement("stop", {
-      offset: "0.55",
-      stopColor: "#cba86a"
+      offset: "0.42",
+      stopColor: "#d97706"
+    }), /*#__PURE__*/React.createElement("stop", {
+      offset: "0.78",
+      stopColor: "#e8a93a"
     }), /*#__PURE__*/React.createElement("stop", {
       offset: "1",
-      stopColor: "#ecd9a8"
-    }))), /*#__PURE__*/React.createElement("path", {
-      d: "M167 36 C 173 116, 191 184, 217 262 C 237 308, 257 330, 257 366 C 257 420, 215 462, 161 466 C 107 462, 65 420, 65 366 C 65 332, 81 312, 101 272 C 125 200, 153 118, 167 36 Z",
-      fill: "url(#fl-gold)"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M165 152 C 168 200, 179 240, 195 286 C 207 313, 219 327, 219 349 C 219 381, 193 408, 161 411 C 129 408, 103 381, 103 349 C 103 328, 113 314, 125 289 C 139 248, 156 200, 165 152 Z",
-      fill: "#faf6ef",
-      fillOpacity: "0.95"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M163 256 C 165 280, 170 302, 178 326 C 184 339, 190 346, 190 358 C 190 374, 177 387, 161 388 C 145 387, 132 374, 132 358 C 132 347, 137 341, 143 328 C 150 306, 159 280, 163 256 Z",
-      fill: "url(#fl-gold)"
+      stopColor: "#f6db88"
+    })), /*#__PURE__*/React.createElement("linearGradient", {
+      id: gi,
+      x1: "0.5",
+      y1: "1",
+      x2: "0.5",
+      y2: "0"
+    }, /*#__PURE__*/React.createElement("stop", {
+      offset: "0",
+      stopColor: "#d97706"
+    }), /*#__PURE__*/React.createElement("stop", {
+      offset: "0.62",
+      stopColor: "#efb74a"
+    }), /*#__PURE__*/React.createElement("stop", {
+      offset: "1",
+      stopColor: "#fbf1cf"
+    }))), FLAME_BACK.map((t, idx) => /*#__PURE__*/React.createElement("path", {
+      key: 'b' + idx,
+      d: FLAME_PETAL,
+      fill: 'url(#' + gw + ')',
+      transform: tongueTransform(t)
+    })), FLAME_INNER.map((t, idx) => /*#__PURE__*/React.createElement("path", {
+      key: 'n' + idx,
+      d: FLAME_PETAL,
+      fill: 'url(#' + gi + ')',
+      transform: tongueTransform(t)
+    })), /*#__PURE__*/React.createElement("path", {
+      d: FLAME_PETAL,
+      fill: "#fbf1cf",
+      fillOpacity: "0.9",
+      transform: tongueTransform(FLAME_CORE)
     }));
   }
   function FlameWatermark() {
+    const [uid] = useState(() => 'fw' + Math.random().toString(36).slice(2, 8));
+    const g = uid + 'g';
     return /*#__PURE__*/React.createElement("div", {
       className: "flame-watermark",
       "aria-hidden": "true"
     }, /*#__PURE__*/React.createElement("svg", {
-      viewBox: "0 0 320 400",
+      viewBox: "0 0 280 380",
       className: "breathe",
       width: "100%",
       height: "100%"
     }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
-      id: "fl-wm",
-      x1: "0.2",
+      id: g,
+      x1: "0.3",
       y1: "1",
       x2: "0.7",
       y2: "0"
@@ -565,10 +608,12 @@
     }), /*#__PURE__*/React.createElement("stop", {
       offset: "1",
       stopColor: "#c9a35a"
-    }))), /*#__PURE__*/React.createElement("path", {
-      d: "M167 36 C 173 116, 191 184, 217 262 C 237 308, 257 330, 257 366 C 257 420, 215 462, 161 466 C 107 462, 65 420, 65 366 C 65 332, 81 312, 101 272 C 125 200, 153 118, 167 36 Z",
-      fill: "url(#fl-wm)"
-    })));
+    }))), FLAME_BACK.map((t, idx) => /*#__PURE__*/React.createElement("path", {
+      key: 'w' + idx,
+      d: FLAME_PETAL,
+      fill: 'url(#' + g + ')',
+      transform: tongueTransform(t)
+    }))));
   }
   function Loader({
     label,
@@ -1007,12 +1052,17 @@
       email: '',
       montant: '',
       motif: 'Général',
+      moyen_paiement: '',
       notes: '',
-      paye: false
+      paye: false,
+      cerfa_envoye: false
     };
     const [form, setForm] = useState(blank);
+    const [cerfaFile, setCerfaFile] = useState(null);
+    const [existingCerfa, setExistingCerfa] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const fileRef = useRef(null);
     useEffect(() => {
       if (!open) return;
       if (editing) {
@@ -1022,17 +1072,43 @@
           email: editing.email || '',
           montant: editing.montant != null ? String(editing.montant) : '',
           motif: editing.motif || 'Général',
+          moyen_paiement: editing.moyen_paiement || '',
           notes: editing.notes || '',
-          paye: editing.statut === 'paye'
+          paye: editing.statut === 'paye',
+          cerfa_envoye: !!editing.cerfa_envoye
         });
+        setExistingCerfa(editing.cerfa_path || null);
       } else {
         setForm(blank);
+        setExistingCerfa(null);
       }
+      setCerfaFile(null);
       setError('');
     }, [open, editing]);
     const set = (k, v) => setForm(f => Object.assign({}, f, {
       [k]: v
     }));
+    const onPickFile = e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      if (f.size > 10 * 1024 * 1024) {
+        setError('Le fichier dépasse 10 Mo.');
+        return;
+      }
+      setError('');
+      setCerfaFile(f);
+    };
+    const viewCerfa = async storagePath => {
+      const {
+        data,
+        error
+      } = await sb.storage.from('cerfa').createSignedUrl(storagePath, 3600);
+      if (error || !data) {
+        toast('Document introuvable.', 'error');
+        return;
+      }
+      window.open(data.signedUrl, '_blank');
+    };
     const submit = async e => {
       e.preventDefault();
       setError('');
@@ -1053,9 +1129,13 @@
         email: form.email.trim() || null,
         montant: montant,
         motif: form.motif || null,
+        moyen_paiement: form.moyen_paiement || null,
         notes: form.notes.trim() || null,
-        statut: form.paye ? 'paye' : 'promesse'
+        statut: form.paye ? 'paye' : 'promesse',
+        cerfa_envoye: !!form.cerfa_envoye
       };
+      if (form.cerfa_envoye && (!editing || !editing.cerfa_envoye)) payload.cerfa_date = nowISO;
+      if (!form.cerfa_envoye) payload.cerfa_date = null;
       setLoading(true);
       let result;
       if (editing) {
@@ -1067,13 +1147,34 @@
         if (form.paye) payload.date_paiement = nowISO;
         result = await sb.from('donations').insert(payload).select().single();
       }
-      setLoading(false);
       if (result.error) {
+        setLoading(false);
         setError('Enregistrement impossible : ' + result.error.message);
         return;
       }
+      let record = result.data;
+      if (cerfaFile) {
+        const ext = (cerfaFile.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
+        const storagePath = record.id + '/cerfa-' + Date.now() + '.' + ext;
+        const up = await sb.storage.from('cerfa').upload(storagePath, cerfaFile, {
+          upsert: true,
+          contentType: cerfaFile.type || undefined
+        });
+        if (up.error) {
+          setLoading(false);
+          toast('Don enregistré, mais le document n\'a pas pu être joint : ' + up.error.message, 'error');
+          onSaved(record, editing ? 'update' : 'insert', false);
+          onClose();
+          return;
+        }
+        const up2 = await sb.from('donations').update({
+          cerfa_path: storagePath
+        }).eq('id', record.id).select().single();
+        if (!up2.error && up2.data) record = up2.data;
+      }
+      setLoading(false);
       toast(editing ? 'Modifications enregistrées, merci.' : form.paye ? 'Don enregistré avec succès, merci.' : 'Promesse enregistrée avec succès, merci.', 'success');
-      onSaved(result.data, editing ? 'update' : 'insert', !editing && form.paye);
+      onSaved(record, editing ? 'update' : 'insert', !editing && form.paye);
       onClose();
     };
     const footer = /*#__PURE__*/React.createElement("div", {
@@ -1147,7 +1248,9 @@
       onChange: e => set('montant', e.target.value.replace(/[^0-9.,]/g, ''))
     }), /*#__PURE__*/React.createElement("span", {
       className: "absolute right-4 top-1/2 -translate-y-1/2 font-serif text-2xl text-gold pointer-events-none"
-    }, "\u20AC"))), /*#__PURE__*/React.createElement(Field, {
+    }, "\u20AC"))), /*#__PURE__*/React.createElement("div", {
+      className: "grid grid-cols-1 sm:grid-cols-2 gap-4"
+    }, /*#__PURE__*/React.createElement(Field, {
       label: "Motif"
     }, /*#__PURE__*/React.createElement("div", {
       className: "relative"
@@ -1163,6 +1266,23 @@
       size: 18,
       className: "absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none"
     }))), /*#__PURE__*/React.createElement(Field, {
+      label: "Moyen de paiement"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "relative"
+    }, /*#__PURE__*/React.createElement("select", {
+      className: inputClass + ' appearance-none pr-10',
+      value: form.moyen_paiement,
+      onChange: e => set('moyen_paiement', e.target.value)
+    }, /*#__PURE__*/React.createElement("option", {
+      value: ""
+    }, "\u2014 Non pr\xE9cis\xE9 \u2014"), MOYENS_PAIEMENT.map(m => /*#__PURE__*/React.createElement("option", {
+      key: m,
+      value: m
+    }, m))), /*#__PURE__*/React.createElement(Icon, {
+      name: "chevron-down",
+      size: 18,
+      className: "absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none"
+    })))), /*#__PURE__*/React.createElement(Field, {
       label: "Notes"
     }, /*#__PURE__*/React.createElement("textarea", {
       className: inputClass + ' py-3 min-h-[88px] resize-none',
@@ -1186,7 +1306,74 @@
       className: cx('toggle', form.paye && 'toggle-on')
     }, /*#__PURE__*/React.createElement("span", {
       className: "toggle-knob"
-    }))), error && /*#__PURE__*/React.createElement("div", {
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "rounded-xl border border-gold-light/60 bg-white p-4 space-y-3"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-2"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "file-text",
+      size: 18,
+      className: "text-gold-dark"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "text-sm font-medium text-ink"
+    }, "Re\xE7u fiscal (CERFA)")), (existingCerfa || cerfaFile) && /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-2 text-sm bg-cream/60 rounded-lg px-3 py-2"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "file-check",
+      size: 16,
+      className: "text-sage shrink-0"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "text-ink-soft truncate flex-1"
+    }, cerfaFile ? cerfaFile.name : 'Document déjà joint'), existingCerfa && !cerfaFile && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => viewCerfa(existingCerfa),
+      className: "text-bordeaux font-medium tappable inline-flex items-center gap-1 shrink-0"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "external-link",
+      size: 14
+    }), " Voir"), cerfaFile && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-label": "Retirer le fichier",
+      onClick: () => {
+        setCerfaFile(null);
+        if (fileRef.current) fileRef.current.value = '';
+      },
+      className: "text-ink-soft tappable shrink-0"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "x",
+      size: 16
+    }))), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => fileRef.current && fileRef.current.click(),
+      className: "w-full min-h-[44px] rounded-xl border border-dashed border-gold-light text-bordeaux text-sm font-medium tappable flex items-center justify-center gap-2 bg-cream/40"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "upload",
+      size: 16
+    }), existingCerfa || cerfaFile ? 'Remplacer le document' : 'Joindre le CERFA (PDF ou photo)'), /*#__PURE__*/React.createElement("input", {
+      ref: fileRef,
+      type: "file",
+      accept: "application/pdf,image/*",
+      style: {
+        display: 'none'
+      },
+      onChange: onPickFile
+    }), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => set('cerfa_envoye', !form.cerfa_envoye),
+      className: cx('w-full flex items-center justify-between gap-3 rounded-xl px-3 py-3 border tappable transition', form.cerfa_envoye ? 'bg-sage/10 border-sage/50' : 'bg-cream/40 border-gold-light/50')
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "flex items-center gap-2"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: form.cerfa_envoye ? 'check-circle' : 'mail',
+      size: 18,
+      className: form.cerfa_envoye ? 'text-sage' : 'text-ink-soft'
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "text-sm font-medium text-ink"
+    }, "CERFA envoy\xE9 au donateur")), /*#__PURE__*/React.createElement("span", {
+      className: cx('toggle', form.cerfa_envoye && 'toggle-on')
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "toggle-knob"
+    })))), error && /*#__PURE__*/React.createElement("div", {
       className: "flex items-start gap-2 text-sm text-red-alert bg-red-alert/8 rounded-xl px-3 py-2.5"
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "alert-circle",
@@ -1366,7 +1553,7 @@
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "bell",
       size: 13
-    }), " Relanc\xE9 ", relativeDays(donation.date_relance)) : /*#__PURE__*/React.createElement("span", {
+    }), " Relanc\xE9 ", donation.relance_count > 1 ? donation.relance_count + ' fois · ' : '', relativeDays(donation.date_relance)) : /*#__PURE__*/React.createElement("span", {
       className: "italic"
     }, "Jamais relanc\xE9 \xB7 promesse ", relativeDays(donation.date_creation))), isMobile ? /*#__PURE__*/React.createElement("button", {
       onClick: e => {
@@ -1464,11 +1651,20 @@
       day: 'numeric',
       month: 'short',
       year: 'numeric'
-    }))), /*#__PURE__*/React.createElement("p", {
+    }), donation.moyen_paiement ? ' · ' + donation.moyen_paiement : ''), /*#__PURE__*/React.createElement("span", {
+      className: cx('inline-flex items-center gap-1 mt-1 text-[11px] font-medium px-1.5 py-0.5 rounded-md', donation.cerfa_envoye ? 'text-sage bg-sage/12' : 'text-amber bg-amber/12')
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: donation.cerfa_envoye ? 'file-check' : 'file-text',
+      size: 11
+    }), donation.cerfa_envoye ? 'CERFA envoyé' : 'CERFA à envoyer')), /*#__PURE__*/React.createElement("p", {
       className: "font-serif text-lg text-sage shrink-0"
     }, formatEuro(donation.montant)), !isMobile && /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-1 pl-1"
-    }, /*#__PURE__*/React.createElement(CardBtn, {
+    }, donation.cerfa_path && /*#__PURE__*/React.createElement(CardBtn, {
+      icon: "file-text",
+      label: "Voir le re\xE7u CERFA",
+      onClick: () => onAction('cerfa', donation)
+    }), /*#__PURE__*/React.createElement(CardBtn, {
       icon: "pencil",
       label: "Modifier",
       onClick: () => onAction('edit', donation)
@@ -1575,6 +1771,10 @@
   }) {
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('tous');
+    const [limit, setLimit] = useState(50);
+    useEffect(() => {
+      setLimit(50);
+    }, [query, filter]);
     const list = useMemo(() => {
       let arr = donations.filter(d => d.statut === 'promesse');
       const q = query.trim().toLowerCase();
@@ -1632,20 +1832,23 @@
       icon: "sparkles",
       title: query || filter !== 'tous' ? 'Aucune promesse trouvée' : 'Aucune promesse en attente',
       text: query || filter !== 'tous' ? 'Essayez de modifier votre recherche ou vos filtres.' : 'Toutes les promesses ont été honorées. Qu\'il en soit ainsi.'
-    }) : /*#__PURE__*/React.createElement("div", {
+    }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "cards-grid mt-1"
-    }, list.map(d => /*#__PURE__*/React.createElement(PromesseCard, {
+    }, list.slice(0, limit).map(d => /*#__PURE__*/React.createElement(PromesseCard, {
       key: d.id,
       donation: d,
       isMobile: isMobile,
       isAdmin: isAdmin,
       onAction: onAction,
       onOpenSheet: onOpenSheet
-    }))), list.length > 0 && /*#__PURE__*/React.createElement("p", {
+    }))), list.length > limit && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setLimit(l => l + 50),
+      className: "w-full min-h-[48px] mt-4 rounded-xl border border-gold-light text-bordeaux font-medium tappable bg-white"
+    }, "Afficher 50 de plus (", list.length - limit, " restantes)")), list.length > 0 && /*#__PURE__*/React.createElement("p", {
       className: "text-center text-sm text-ink-soft mt-5"
     }, /*#__PURE__*/React.createElement("span", {
       className: "font-medium text-ink"
-    }, list.length), " promesse", list.length > 1 ? 's' : '', " affich\xE9e", list.length > 1 ? 's' : '', ' · total en attente ', /*#__PURE__*/React.createElement("span", {
+    }, list.length), " promesse", list.length > 1 ? 's' : '', " en attente", ' · total ', /*#__PURE__*/React.createElement("span", {
       className: "font-serif text-amber"
     }, formatEuro(totalProm))));
   }
@@ -1829,30 +2032,35 @@
         return;
       }
       setLoading(true);
-      // Client temporaire : la création ne modifie pas la session de l'administrateur.
-      const tmp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
-        }
-      });
+      // Création via une fonction Edge sécurisée (clé service role) : compte
+      // immédiatement confirmé, aucun email envoyé, aucune limite d'envoi,
+      // et la session de l'administrateur reste intacte.
       const {
-        error
-      } = await tmp.auth.signUp({
-        email: slug + '@synagogue-charenton.fr',
-        password: form.password,
-        options: {
-          data: {
-            nom: nom,
-            role: form.role
-          }
+        data: res,
+        error: fnError
+      } = await sb.functions.invoke('create-user', {
+        body: {
+          nom: nom,
+          password: form.password,
+          role: form.role
         }
       });
       setLoading(false);
-      if (error) {
-        const msg = /already|registered|exist/i.test(error.message || '') ? 'Un compte existe déjà sous ce nom. Ajoutez une distinction (par exemple le prénom et l\'initiale du nom).' : authErrorMessage(error);
+      if (fnError) {
+        let msg = 'Création impossible. Merci de réessayer dans un instant.';
+        try {
+          if (fnError.context && typeof fnError.context.json === 'function') {
+            const ctx = await fnError.context.json();
+            if (ctx && ctx.error) msg = ctx.error;
+          } else if (fnError.message) {
+            msg = fnError.message;
+          }
+        } catch (_) {}
         setError(msg);
+        return;
+      }
+      if (res && res.error) {
+        setError(res.error);
         return;
       }
       toast('Compte créé. Identifiant : « ' + nom + ' » — Mot de passe : ' + form.password, 'info');
@@ -1972,6 +2180,121 @@
     }, text));
   }
 
+  /* ====================== JOURNAL D'AUDIT ====================== */
+  const AUDIT_KINDS = {
+    don_cree: {
+      icon: 'plus',
+      tone: 'text-sage',
+      bg: 'bg-sage/12',
+      label: 'Don créé'
+    },
+    don_modifie: {
+      icon: 'pencil',
+      tone: 'text-gold-dark',
+      bg: 'bg-gold/12',
+      label: 'Don modifié'
+    },
+    don_supprime: {
+      icon: 'trash-2',
+      tone: 'text-red-alert',
+      bg: 'bg-red-alert/10',
+      label: 'Don supprimé'
+    },
+    paiement_valide: {
+      icon: 'check-circle',
+      tone: 'text-sage',
+      bg: 'bg-sage/12',
+      label: 'Paiement validé'
+    },
+    compte_cree: {
+      icon: 'user-plus',
+      tone: 'text-bordeaux',
+      bg: 'bg-bordeaux/8',
+      label: 'Compte créé'
+    },
+    compte_role: {
+      icon: 'shield-check',
+      tone: 'text-bordeaux',
+      bg: 'bg-bordeaux/8',
+      label: 'Rôle modifié'
+    },
+    compte_actif: {
+      icon: 'users',
+      tone: 'text-terracotta',
+      bg: 'bg-terracotta/10',
+      label: 'Compte (dés)activé'
+    }
+  };
+  function JournalView({
+    entries,
+    loading,
+    onReload
+  }) {
+    const [limit, setLimit] = useState(60);
+    const shown = entries.slice(0, limit);
+    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-between gap-3 mb-4"
+    }, /*#__PURE__*/React.createElement("h2", {
+      className: "font-serif text-xl text-ink"
+    }, "Journal d'activit\xE9"), /*#__PURE__*/React.createElement("button", {
+      onClick: onReload,
+      className: "inline-flex items-center gap-1.5 text-sm text-bordeaux font-medium tappable px-2.5 py-1.5 rounded-lg"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "refresh-cw",
+      size: 16
+    }), " Actualiser")), /*#__PURE__*/React.createElement("p", {
+      className: "text-sm text-ink-soft mb-4 -mt-2"
+    }, "Toutes les actions sur les dons et les comptes, avec leur auteur."), loading ? /*#__PURE__*/React.createElement(Loader, {
+      label: "Chargement du journal\u2026"
+    }) : entries.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
+      icon: "history",
+      title: "Journal vide pour l'instant",
+      text: "Les ajouts, modifications, suppressions et validations de paiement appara\xEEtront ici."
+    }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "space-y-2.5"
+    }, shown.map(e => {
+      const k = AUDIT_KINDS[e.action] || {
+        icon: 'info',
+        tone: 'text-ink-soft',
+        bg: 'bg-cream',
+        label: e.action
+      };
+      return /*#__PURE__*/React.createElement("div", {
+        key: e.id,
+        className: "card don-card"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "flex items-start gap-3"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: cx('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', k.bg)
+      }, /*#__PURE__*/React.createElement(Icon, {
+        name: k.icon,
+        size: 17,
+        className: k.tone
+      })), /*#__PURE__*/React.createElement("div", {
+        className: "min-w-0 flex-1"
+      }, /*#__PURE__*/React.createElement("p", {
+        className: "text-sm text-ink leading-snug"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "font-medium"
+      }, k.label), e.resume ? ' — ' + e.resume : ''), /*#__PURE__*/React.createElement("p", {
+        className: "text-xs text-ink-soft mt-1"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "font-medium text-ink-soft"
+      }, e.actor_nom || 'Système'), ' · ', formatDate(e.created_at, {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })))));
+    })), entries.length > limit && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setLimit(l => l + 60),
+      className: "w-full min-h-[48px] mt-4 rounded-xl border border-gold-light text-bordeaux font-medium tappable bg-white"
+    }, "Afficher plus (", entries.length - limit, " restants)"), /*#__PURE__*/React.createElement("p", {
+      className: "text-center text-sm text-ink-soft mt-5"
+    }, entries.length, " entr\xE9e", entries.length > 1 ? 's' : '', " au journal")));
+  }
+
   /* ====================== BANDEAU INSTALLATION ====================== */
   function InstallBanner() {
     const [visible, setVisible] = useState(false);
@@ -2048,7 +2371,7 @@
 
   /* ====================== EXPORTS CSV ====================== */
   function exportPromesses(donations) {
-    const rows = donations.filter(d => d.statut === 'promesse').slice().sort((a, b) => new Date(a.date_creation) - new Date(b.date_creation)).map(d => [d.nom_donateur, d.telephone || '', d.email || '', String(d.montant).replace('.', ','), d.motif || '', formatDate(d.date_creation, {
+    const rows = donations.filter(d => d.statut === 'promesse').slice().sort((a, b) => new Date(a.date_creation) - new Date(b.date_creation)).map(d => [d.nom_donateur, d.telephone || '', d.email || '', String(d.montant).replace('.', ','), d.motif || '', d.moyen_paiement || '', formatDate(d.date_creation, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
@@ -2056,11 +2379,11 @@
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
-    }) : '', daysSince(d.date_creation), d.notes || '']);
-    exportCSV(['Nom', 'Téléphone', 'Email', 'Montant (€)', 'Motif', 'Date promesse', 'Dernière relance', 'Jours écoulés', 'Notes'], rows, 'synagogue-charenton-promesses-' + todayISO() + '.csv');
+    }) : '', d.relance_count || 0, daysSince(d.date_creation), d.notes || '']);
+    exportCSV(['Nom', 'Téléphone', 'Email', 'Montant (€)', 'Motif', 'Moyen de paiement', 'Date promesse', 'Dernière relance', 'Nb relances', 'Jours écoulés', 'Notes'], rows, 'synagogue-charenton-promesses-' + todayISO() + '.csv');
   }
   function exportDons(donations) {
-    const rows = donations.filter(d => d.statut === 'paye').slice().sort((a, b) => new Date(b.date_paiement || b.date_creation) - new Date(a.date_paiement || a.date_creation)).map(d => [d.nom_donateur, d.telephone || '', d.email || '', String(d.montant).replace('.', ','), d.motif || '', formatDate(d.date_paiement || d.date_creation, {
+    const rows = donations.filter(d => d.statut === 'paye').slice().sort((a, b) => new Date(b.date_paiement || b.date_creation) - new Date(a.date_paiement || a.date_creation)).map(d => [d.nom_donateur, d.telephone || '', d.email || '', String(d.montant).replace('.', ','), d.motif || '', d.moyen_paiement || '', formatDate(d.date_paiement || d.date_creation, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
@@ -2068,8 +2391,12 @@
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
-    }), d.notes || '']);
-    exportCSV(['Nom', 'Téléphone', 'Email', 'Montant (€)', 'Motif', 'Date paiement', 'Date promesse initiale', 'Notes'], rows, 'synagogue-charenton-dons-' + todayISO() + '.csv');
+    }), d.cerfa_envoye ? 'Oui' : 'Non', d.cerfa_date ? formatDate(d.cerfa_date, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }) : '', d.notes || '']);
+    exportCSV(['Nom', 'Téléphone', 'Email', 'Montant (€)', 'Motif', 'Moyen de paiement', 'Date paiement', 'Date promesse initiale', 'CERFA envoyé', 'Date CERFA', 'Notes'], rows, 'synagogue-charenton-dons-' + todayISO() + '.csv');
   }
 
   /* ====================== TABLEAU DE BORD ====================== */
@@ -2096,6 +2423,8 @@
     const [confettiKey, setConfettiKey] = useState(0);
     const [profiles, setProfiles] = useState([]);
     const [profilesLoading, setProfilesLoading] = useState(false);
+    const [auditLog, setAuditLog] = useState([]);
+    const [auditLoading, setAuditLoading] = useState(false);
     const searchRef = useRef(null);
     const loadDonations = useCallback(async silent => {
       if (!silent) setLoading(true);else setRefreshing(true);
@@ -2127,12 +2456,30 @@
       }
       setProfiles(data || []);
     }, [toast]);
+    const loadAuditLog = useCallback(async () => {
+      setAuditLoading(true);
+      const {
+        data,
+        error
+      } = await sb.from('audit_log').select('*').order('created_at', {
+        ascending: false
+      }).limit(400);
+      setAuditLoading(false);
+      if (error) {
+        toast('Journal inaccessible : ' + error.message, 'error');
+        return;
+      }
+      setAuditLog(data || []);
+    }, [toast]);
     useEffect(() => {
       loadDonations(false);
     }, [loadDonations]);
     useEffect(() => {
       if (tab === 'users' && isAdmin) loadProfiles();
     }, [tab, isAdmin, loadProfiles]);
+    useEffect(() => {
+      if (tab === 'journal' && isAdmin) loadAuditLog();
+    }, [tab, isAdmin, loadAuditLog]);
 
     // Raccourcis clavier (desktop)
     useEffect(() => {
@@ -2140,7 +2487,7 @@
       const onKey = e => {
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
           e.preventDefault();
-          if (tab !== 'users') setDonationModal({
+          if (tab !== 'users' && tab !== 'journal') setDonationModal({
             open: true,
             editing: null
           });
@@ -2203,17 +2550,37 @@
       }
       if (action === 'relance') {
         const {
-          data,
           error
-        } = await sb.from('donations').update({
-          date_relance: new Date().toISOString()
-        }).eq('id', donation.id).select().single();
+        } = await sb.from('relances').insert({
+          donation_id: donation.id,
+          created_by: session.user.id,
+          created_by_nom: profile.nom
+        });
         if (error) {
           toast('Action impossible : ' + error.message, 'error');
           return;
         }
-        upsertLocal(data, 'update');
+        const {
+          data: fresh
+        } = await sb.from('donations').select('*').eq('id', donation.id).single();
+        if (fresh) upsertLocal(fresh, 'update');
         toast('Relance notée pour ' + donation.nom_donateur + '.', 'success');
+        return;
+      }
+      if (action === 'cerfa') {
+        if (!donation.cerfa_path) {
+          toast('Aucun document joint à ce don.', 'info');
+          return;
+        }
+        const {
+          data,
+          error
+        } = await sb.storage.from('cerfa').createSignedUrl(donation.cerfa_path, 3600);
+        if (error || !data) {
+          toast('Document introuvable.', 'error');
+          return;
+        }
+        window.open(data.signedUrl, '_blank');
         return;
       }
       if (action === 'delete') {
@@ -2229,7 +2596,7 @@
         toast('Entrée supprimée.', 'success');
         return;
       }
-    }, [toast]);
+    }, [toast, session, profile]);
     const sheetActions = d => d ? [{
       key: 'pay',
       icon: 'check-circle',
@@ -2269,7 +2636,12 @@
       danger: true,
       run: () => handleAction('delete', d)
     }] : [];
-    const sheetActionsDon = d => d ? [{
+    const sheetActionsDon = d => d ? [d.cerfa_path && {
+      key: 'cerfa',
+      icon: 'file-text',
+      label: 'Voir le reçu CERFA',
+      run: () => handleAction('cerfa', d)
+    }, {
       key: 'edit',
       icon: 'pencil',
       label: 'Modifier',
@@ -2318,11 +2690,18 @@
       label: 'Dons',
       icon: 'banknote'
     }];
-    if (isAdmin) tabs.push({
-      k: 'users',
-      label: 'Utilisateurs',
-      icon: 'users'
-    });
+    if (isAdmin) {
+      tabs.push({
+        k: 'users',
+        label: 'Utilisateurs',
+        icon: 'users'
+      });
+      tabs.push({
+        k: 'journal',
+        label: 'Journal',
+        icon: 'history'
+      });
+    }
     return /*#__PURE__*/React.createElement("div", {
       className: "min-h-screen relative"
     }, /*#__PURE__*/React.createElement(FlameWatermark, null), /*#__PURE__*/React.createElement(Confetti, {
@@ -2352,7 +2731,7 @@
       size: 17
     }), " ", t.label))), /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2 ml-auto"
-    }, isTablet && tab !== 'users' && /*#__PURE__*/React.createElement("button", {
+    }, isTablet && tab !== 'users' && tab !== 'journal' && /*#__PURE__*/React.createElement("button", {
       onClick: () => setDonationModal({
         open: true,
         editing: null
@@ -2448,9 +2827,13 @@
         toast('Rôle mis à jour pour ' + p.nom + '.', 'success');
         loadProfiles();
       }
+    }), tab === 'journal' && isAdmin && /*#__PURE__*/React.createElement(JournalView, {
+      entries: auditLog,
+      loading: auditLoading,
+      onReload: loadAuditLog
     }))), /*#__PURE__*/React.createElement("p", {
       className: "watermark-text"
-    }, "\u05D0\u05E9 \u05E9\u05DC\u05D9")), isMobile && tab !== 'users' && /*#__PURE__*/React.createElement("button", {
+    }, "\u05D0\u05E9 \u05E9\u05DC\u05D9")), isMobile && tab !== 'users' && tab !== 'journal' && /*#__PURE__*/React.createElement("button", {
       onClick: () => setDonationModal({
         open: true,
         editing: null
