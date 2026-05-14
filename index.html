@@ -1039,7 +1039,7 @@
       }
       window.open(data.signedUrl, '_blank');
     };
-    const submit = async e => {
+    const submit = async (e, keepOpen) => {
       e.preventDefault();
       setError('');
       const nom = form.nom_donateur.trim();
@@ -1107,9 +1107,23 @@
       setLoading(false);
       toast(editing ? 'Modifications enregistrées, merci.' : form.paye ? 'Don enregistré avec succès, merci.' : 'Promesse enregistrée avec succès, merci.', 'success');
       onSaved(record, editing ? 'update' : 'insert', !editing && form.paye);
-      onClose();
+      if (keepOpen && !editing) {
+        // garde la modale ouverte pour enchaîner ; conserve motif / moyen / paiement
+        setForm(f => Object.assign({}, blank, {
+          motif: f.motif,
+          moyen_paiement: f.moyen_paiement,
+          paye: f.paye,
+          date_paiement: f.date_paiement
+        }));
+        setCerfaFile(null);
+        setExistingCerfa(null);
+      } else {
+        onClose();
+      }
     };
     const footer = /*#__PURE__*/React.createElement("div", {
+      className: "space-y-2.5"
+    }, /*#__PURE__*/React.createElement("div", {
       className: "flex gap-3"
     }, /*#__PURE__*/React.createElement("button", {
       type: "button",
@@ -1126,7 +1140,15 @@
     }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
       name: "check",
       size: 18
-    }), " Enregistrer")));
+    }), " Enregistrer"))), !editing && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      disabled: loading,
+      onClick: e => submit(e, true),
+      className: "w-full min-h-[46px] rounded-xl border border-gold-light text-bordeaux font-medium tappable bg-white inline-flex items-center justify-center gap-2 disabled:opacity-60"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "plus",
+      size: 17
+    }), " Enregistrer et en ajouter un autre"));
     return /*#__PURE__*/React.createElement(Modal, {
       open: open,
       onClose: onClose,
@@ -3122,29 +3144,27 @@
         sub.subscription.unsubscribe();
       };
     }, []);
+    const sessionUserId = session ? session.user.id : null;
     useEffect(() => {
-      if (!session) {
+      if (!sessionUserId) {
         setProfile(null);
         return;
       }
       let active = true;
       setProfileLoading(true);
-      sb.from('profiles').select('*').eq('id', session.user.id).single().then(({
+      sb.from('profiles').select('*').eq('id', sessionUserId).single().then(({
         data,
         error
       }) => {
         if (!active) return;
         setProfileLoading(false);
-        if (error) {
-          setProfile(null);
-          return;
-        }
-        setProfile(data);
+        // en cas d'erreur passagere, on garde le profil deja chargé
+        if (!error && data) setProfile(data);
       });
       return () => {
         active = false;
       };
-    }, [session]);
+    }, [sessionUserId]);
     const signOut = useCallback(async () => {
       await sb.auth.signOut();
       setProfile(null);
@@ -3188,7 +3208,7 @@
       onDone: () => setRecovery(false)
     });
     if (!session) return /*#__PURE__*/React.createElement(LoginScreen, null);
-    if (profileLoading || !profile && session) {
+    if (!profile) {
       return /*#__PURE__*/React.createElement("div", {
         className: "bg-cream"
       }, /*#__PURE__*/React.createElement(Loader, {
@@ -3196,7 +3216,7 @@
         full: true
       }));
     }
-    if (profile && !profile.actif) return /*#__PURE__*/React.createElement(DisabledScreen, {
+    if (!profile.actif) return /*#__PURE__*/React.createElement(DisabledScreen, {
       onSignOut: signOut
     });
     return /*#__PURE__*/React.createElement(Dashboard, {
