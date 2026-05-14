@@ -1,0 +1,2604 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <title>CRM Synagogue Charenton</title>
+  <meta name="description" content="Gestion des dons et promesses de don de la Synagogue de Charenton." />
+  <meta name="theme-color" content="#7c2d3a" />
+  <link rel="manifest" href="./manifest.json" />
+
+  <!-- iOS / PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Synagogue" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
+
+  <!-- Polices -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: '#faf6ef',
+            surface: '#fffdf8',
+            ink: '#1a2238',
+            'ink-soft': '#5a5a6e',
+            gold: '#b8924a',
+            'gold-dark': '#8a6c34',
+            'gold-light': '#d4b878',
+            bordeaux: '#7c2d3a',
+            'bordeaux-dark': '#5a1f2a',
+            amber: '#d97706',
+            sage: '#5a7a4f',
+            terracotta: '#c2410c',
+            'red-alert': '#991b1b'
+          },
+          fontFamily: {
+            serif: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html,body{margin:0;padding:0;background:#faf6ef;}
+    body{font-family:'Inter',system-ui,sans-serif;color:#1a2238;-webkit-font-smoothing:antialiased;
+      overscroll-behavior-y:contain;min-height:100vh;min-height:100dvh;}
+    input,select,textarea,button{font-family:inherit;}
+    h1,h2,h3{margin:0;}
+    button{cursor:pointer;border:none;background:none;padding:0;}
+    .font-serif{font-family:'Fraunces','Georgia',serif;}
+    .no-scrollbar::-webkit-scrollbar{display:none;}
+    .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
+
+    /* ---- zones sûres iPhone ---- */
+    .safe-top{padding-top:env(safe-area-inset-top);}
+    .safe-bottom{padding-bottom:env(safe-area-inset-bottom);}
+
+    /* ---- effets tactiles ---- */
+    .tappable{transition:transform .12s ease-out,background-color .15s ease,box-shadow .2s ease,opacity .15s ease;}
+    .tappable:active{transform:scale(.97);}
+
+    /* ---- ombres chaudes ---- */
+    .card-shadow{box-shadow:0 4px 20px rgba(184,146,74,.08),0 1px 3px rgba(124,45,58,.06);}
+
+    /* ---- filigrane flamme ---- */
+    .flame-watermark{position:fixed;z-index:0;pointer-events:none;right:-3vw;bottom:-4vh;
+      width:46vw;max-width:560px;min-width:240px;height:auto;opacity:.10;filter:blur(1.5px);}
+    @media(max-width:767px){.flame-watermark{width:64vw;right:-13vw;bottom:1vh;opacity:.085;}}
+    .breathe{animation:breathe 6s ease-in-out infinite;transform-origin:50% 86%;}
+    .flame-anim{animation:breathe 6s ease-in-out infinite;transform-origin:50% 86%;}
+    .flicker{animation:flicker .95s ease-in-out infinite;transform-origin:50% 88%;}
+    @keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.02);}}
+    @keyframes flicker{0%,100%{opacity:1;transform:scale(1) rotate(-1deg);}
+      25%{opacity:.82;transform:scale(1.05) rotate(1.2deg);}
+      55%{opacity:.96;transform:scale(.97) rotate(-1.6deg);}
+      80%{opacity:.78;transform:scale(1.03) rotate(1.6deg);}}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .spin svg{animation:spin .8s linear infinite;}
+
+    .watermark-text{text-align:center;font-family:'Fraunces',serif;font-style:italic;
+      color:#1a2238;opacity:.18;font-size:22px;padding:26px 0 14px;letter-spacing:.04em;}
+
+    /* ---- en-tête ---- */
+    .app-header{position:sticky;top:0;z-index:30;
+      background:rgba(250,246,239,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border-bottom:1px solid rgba(212,184,120,.4);}
+    .header-inner{max-width:1140px;margin:0 auto;display:flex;align-items:center;gap:10px;
+      padding:9px 14px;min-height:58px;}
+    @media(min-width:768px){.header-inner{padding:10px 22px;}}
+
+    /* ---- contenu ---- */
+    .app-main{position:relative;z-index:10;}
+    .content-wrap{max-width:1140px;margin:0 auto;padding:18px 14px 0;}
+    @media(min-width:768px){.content-wrap{padding:24px 22px 0;}}
+    .app-main{padding-bottom:calc(86px + env(safe-area-inset-bottom));}
+    @media(min-width:768px){.app-main{padding-bottom:36px;}}
+
+    /* ---- carte ---- */
+    .card{background:#fffdf8;border:1px solid rgba(212,184,120,.42);border-radius:1rem;
+      padding:18px;box-shadow:0 4px 20px rgba(184,146,74,.08),0 1px 3px rgba(124,45,58,.06);
+      transition:transform .2s ease-out,box-shadow .25s ease,border-color .2s ease;}
+    @media(min-width:768px){.card{padding:22px;}}
+    @media(hover:hover){
+      .promesse-card:hover,.don-card:hover{transform:translateY(-2px);
+        border-color:#d4b878;box-shadow:0 10px 28px rgba(184,146,74,.16),0 2px 6px rgba(124,45,58,.08);}
+    }
+    .promesse-card{cursor:pointer;}
+    @media(min-width:768px){.promesse-card{cursor:default;}}
+    .don-card{padding:14px 16px;}
+    .cards-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+    @media(min-width:768px){.cards-grid{grid-template-columns:1fr 1fr;gap:16px;}}
+    @media(min-width:1280px){.cards-grid{grid-template-columns:1fr 1fr 1fr;}}
+
+    .montant-display{font-family:'Fraunces',serif;font-size:30px;font-weight:500;line-height:1.05;letter-spacing:.005em;}
+    @media(min-width:768px){.montant-display{font-size:32px;}}
+    .montant-input{font-family:'Fraunces',serif!important;font-size:30px!important;font-weight:500;}
+
+    /* ---- KPI ---- */
+    .kpi-grid{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+      -ms-overflow-style:none;scrollbar-width:none;padding-bottom:2px;margin:0 -14px;padding-left:14px;padding-right:14px;}
+    .kpi-grid::-webkit-scrollbar{display:none;}
+    .kpi-card{scroll-snap-align:start;flex:0 0 78%;background:#fffdf8;
+      border:1px solid rgba(212,184,120,.42);border-radius:1rem;padding:16px 18px;
+      box-shadow:0 4px 20px rgba(184,146,74,.08),0 1px 3px rgba(124,45,58,.06);}
+    .kpi-card-feature{border-color:rgba(217,119,6,.45);
+      background:linear-gradient(160deg,#fffdf8 60%,rgba(217,119,6,.06));}
+    @media(min-width:768px){
+      .kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;overflow:visible;margin:0;padding:0;}
+      .kpi-card{flex:none;}
+    }
+    .kpi-head{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+    .kpi-icon{width:36px;height:36px;border-radius:.7rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .kpi-label{font-size:12.5px;font-weight:600;color:#5a5a6e;text-transform:uppercase;letter-spacing:.04em;}
+    .kpi-value{font-family:'Fraunces',serif;font-size:30px;font-weight:600;line-height:1.1;}
+    @media(min-width:768px){.kpi-value{font-size:32px;}}
+    .kpi-sub{font-size:12.5px;color:#5a5a6e;margin-top:3px;}
+
+    /* ---- badges ---- */
+    .badge{display:inline-flex;align-items:center;font-size:12px;font-weight:600;
+      padding:3px 9px;border-radius:999px;white-space:nowrap;}
+    .badge-red{background:rgba(153,27,27,.12);color:#991b1b;}
+    .badge-amber{background:rgba(217,119,6,.15);color:#b45309;}
+    .badge-neutral{background:rgba(90,90,110,.12);color:#5a5a6e;}
+    .badge-sage{background:rgba(90,122,79,.16);color:#4a6640;}
+    .motif-chip{display:inline-block;background:rgba(184,146,74,.12);color:#8a6c34;
+      font-size:12px;font-weight:500;padding:2px 9px;border-radius:999px;}
+
+    /* ---- chips filtres ---- */
+    .chip-row{display:flex;gap:8px;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none;
+      padding-bottom:4px;margin-bottom:14px;}
+    .chip-row::-webkit-scrollbar{display:none;}
+    .chip{flex-shrink:0;padding:7px 15px;border-radius:999px;border:1px solid rgba(212,184,120,.6);
+      background:#fff;font-size:13px;font-weight:500;color:#5a5a6e;transition:all .18s ease;min-height:38px;}
+    .chip:active{transform:scale(.96);}
+    .chip-active{background:#7c2d3a;color:#faf6ef;border-color:#7c2d3a;}
+
+    .total-bar{display:flex;align-items:center;justify-content:space-between;
+      margin-top:18px;padding:14px 16px;background:#fffdf8;border:1px solid rgba(212,184,120,.42);
+      border-radius:1rem;}
+
+    /* ---- swipe ---- */
+    .swipe-wrap{position:relative;border-radius:1rem;overflow:hidden;}
+    .swipe-bg{position:absolute;inset:0;display:flex;align-items:center;gap:8px;padding:0 24px;
+      font-size:14px;font-weight:600;border-radius:1rem;transition:opacity .15s ease;}
+    .swipe-bg-left{background:#5a7a4f;color:#faf6ef;justify-content:flex-start;}
+    .swipe-bg-right{background:#d97706;color:#faf6ef;justify-content:flex-end;}
+
+    /* ---- onglets ---- */
+    .top-tab{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:.8rem;
+      font-size:14px;font-weight:500;color:#5a5a6e;transition:all .18s ease;min-height:42px;}
+    .top-tab:hover{background:rgba(124,45,58,.06);}
+    .top-tab-active{background:rgba(124,45,58,.1);color:#7c2d3a;}
+    .bottom-bar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
+      background:rgba(255,253,248,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border-top:1px solid rgba(212,184,120,.5);padding-bottom:env(safe-area-inset-bottom);}
+    .bottom-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:3px;padding:9px 4px 8px;font-size:11px;font-weight:500;color:#5a5a6e;min-height:60px;
+      transition:color .15s ease;}
+    .bottom-tab:active{transform:scale(.94);}
+    .bottom-tab-active{color:#7c2d3a;}
+
+    /* ---- FAB ---- */
+    .fab{position:fixed;right:18px;bottom:calc(82px + env(safe-area-inset-bottom));z-index:35;
+      width:64px;height:64px;border-radius:999px;background:#7c2d3a;color:#faf6ef;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 8px 24px rgba(124,45,58,.4),0 2px 6px rgba(124,45,58,.3);
+      transition:transform .14s ease-out,background-color .2s ease;}
+    .fab:active{transform:scale(.93);background:#5a1f2a;}
+
+    /* ---- pull to refresh ---- */
+    .ptr-indicator{display:flex;align-items:center;justify-content:center;overflow:hidden;
+      color:#b8924a;position:relative;z-index:5;}
+
+    /* ---- modale ---- */
+    .modal-backdrop{position:fixed;inset:0;z-index:50;background:rgba(26,34,56,.45);
+      backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;
+      align-items:flex-end;justify-content:center;animation:fadein .2s ease-out;}
+    @media(min-width:768px){.modal-backdrop{align-items:center;padding:24px;}}
+    .modal-panel{background:#faf6ef;display:flex;flex-direction:column;width:100%;}
+    .modal-panel-mobile{border-radius:1.4rem 1.4rem 0 0;max-height:93vh;animation:slideup .3s ease-out;
+      padding-bottom:env(safe-area-inset-bottom);}
+    .modal-panel-centered{max-width:600px;border-radius:1.3rem;max-height:88vh;
+      animation:popin .25s ease-out;box-shadow:0 24px 60px rgba(26,34,56,.3);}
+    @media(min-width:1024px){.modal-panel-centered{max-width:680px;}}
+    .drag-handle{width:42px;height:4px;border-radius:999px;background:rgba(90,90,110,.28);
+      margin:10px auto 2px;flex-shrink:0;}
+    .modal-body{flex:1;overflow-y:auto;padding-top:4px;padding-bottom:8px;-webkit-overflow-scrolling:touch;}
+    .modal-footer{flex-shrink:0;}
+    .action-sheet{background:#faf6ef;width:100%;border-radius:1.4rem 1.4rem 0 0;
+      animation:slideup .3s ease-out;padding-bottom:env(safe-area-inset-bottom);
+      max-width:560px;}
+    @keyframes fadein{from{opacity:0;}to{opacity:1;}}
+    @keyframes slideup{from{transform:translateY(100%);}to{transform:translateY(0);}}
+    @keyframes popin{from{opacity:0;transform:scale(.96) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);}}
+
+    /* ---- toggle ---- */
+    .toggle{width:46px;height:27px;border-radius:999px;background:rgba(90,90,110,.28);
+      position:relative;transition:background-color .2s ease;flex-shrink:0;}
+    .toggle-on{background:#5a7a4f;}
+    .toggle-knob{position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:999px;
+      background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s ease;}
+    .toggle-on .toggle-knob{transform:translateX(19px);}
+
+    /* ---- toasts ---- */
+    .toast-wrap{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;flex-direction:column;
+      align-items:center;gap:8px;padding:12px;pointer-events:none;}
+    .toast-item{pointer-events:auto;width:100%;max-width:440px;background:#faf6ef;
+      border:1px solid #b8924a;border-left:3px solid #b8924a;border-radius:13px;
+      padding:12px 14px;display:flex;gap:10px;align-items:flex-start;color:#1a2238;font-size:14px;
+      box-shadow:0 8px 24px rgba(124,45,58,.16);animation:toastin .25s ease-out;}
+    .toast-item svg{color:#5a7a4f;}
+    .toast-error{border-color:#c2410c;border-left-color:#c2410c;}
+    .toast-error svg{color:#c2410c;}
+    .toast-info{border-color:#b8924a;border-left-color:#b8924a;}
+    .toast-info svg{color:#8a6c34;}
+    @keyframes toastin{from{opacity:0;transform:translateY(-14px);}to{opacity:1;transform:translateY(0);}}
+
+    /* ---- confetti ---- */
+    .confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:55;overflow:hidden;}
+    .confetti-piece{position:absolute;top:-24px;border-radius:1px;
+      animation-name:confettifall;animation-timing-function:cubic-bezier(.3,.1,.5,1);animation-fill-mode:forwards;}
+    @keyframes confettifall{0%{transform:translate(0,0) rotate(0);opacity:1;}
+      100%{transform:translate(var(--drift),112vh) rotate(var(--rot));opacity:.85;}}
+
+    /* ---- bandeau installation ---- */
+    .install-banner{position:fixed;left:0;right:0;z-index:45;background:#fffdf8;
+      border-top:1px solid rgba(212,184,120,.6);padding:12px 14px;
+      box-shadow:0 -6px 20px rgba(124,45,58,.1);
+      bottom:calc(60px + env(safe-area-inset-bottom));}
+    @media(min-width:768px){.install-banner{bottom:0;max-width:520px;left:auto;right:18px;
+      border:1px solid rgba(212,184,120,.6);border-radius:1rem;margin-bottom:18px;}}
+
+    /* ---- lueur de connexion ---- */
+    .login-glow{position:absolute;top:-10%;left:50%;transform:translateX(-50%);
+      width:120vw;max-width:760px;height:60vh;pointer-events:none;
+      background:radial-gradient(ellipse at center,rgba(184,146,74,.16),transparent 70%);}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Bibliothèques (CDN) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+  <!-- Application -->
+  <script>
+/* CRM Synagogue Charenton — application React (source JSX, compilée vers JS) */
+(function () {
+  'use strict';
+
+  const {
+    useState,
+    useEffect,
+    useRef,
+    useCallback,
+    useMemo,
+    createContext,
+    useContext
+  } = React;
+
+  /* ====================== CONFIG SUPABASE ====================== */
+  const SUPABASE_URL = 'https://eyrlgbjzatktwkjhsrsb.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5cmxnYmp6YXRrdHdramhzcnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NTk3MDQsImV4cCI6MjA5NDMzNTcwNH0.Kyg7eBs0tRxuAJHvUizvGYYuVnDiR8GBPp-SaoAVxXc';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  });
+  const MOTIFS = ['Kippour', 'Yahrzeit', 'Sefer Torah', 'Mitsva', 'Tsedaka', 'Roch Hachana', 'Pessah', 'Souccot', 'Bar Mitsva', 'Hanouka', 'Pourim', 'Général', 'Autre'];
+
+  /* ====================== ICÔNES (Lucide, intégrées) ====================== */
+  const ICONS = {
+    flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+    'log-out': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>',
+    plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+    search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    'message-square': '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+    pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    'trash-2': '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    'check-circle': '<path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    'user-plus': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/>',
+    download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+    x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    bell: '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326z"/>',
+    'scroll-text': '<path d="M15 12h-5"/><path d="M15 8h-5"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>',
+    filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+    'chevron-right': '<path d="m9 18 6-6-6-6"/>',
+    'chevron-down': '<path d="m6 9 6 6 6-6"/>',
+    'chevron-left': '<path d="m15 18-6-6 6-6"/>',
+    'more-horizontal': '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+    'refresh-cw': '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+    mail: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+    'share-ios': '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/>',
+    'wifi-off': '<path d="M12 20h.01"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/><path d="M5 12.859a10 10 0 0 1 5.17-2.69"/><path d="M19 12.859a10 10 0 0 0-2.007-1.523"/><path d="M2 8.82a15 15 0 0 1 4.177-2.643"/><path d="M22 8.82a15 15 0 0 0-11.288-3.764"/><path d="m2 2 20 20"/>',
+    lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    eye: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+    'eye-off': '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
+    calendar: '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+    'arrow-left': '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+    sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>',
+    banknote: '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+    coins: '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
+    'trending-up': '<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    'alert-circle': '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
+    info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+    'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+    'phone-call': '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    menu: '<line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/>'
+  };
+  function Icon({
+    name,
+    size = 22,
+    className = '',
+    strokeWidth = 1.5
+  }) {
+    const inner = ICONS[name];
+    if (!inner) return null;
+    return /*#__PURE__*/React.createElement("svg", {
+      xmlns: "http://www.w3.org/2000/svg",
+      width: size,
+      height: size,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: strokeWidth,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      className: className,
+      "aria-hidden": "true",
+      dangerouslySetInnerHTML: {
+        __html: inner
+      }
+    });
+  }
+
+  /* ====================== UTILITAIRES ====================== */
+  const cx = (...c) => c.filter(Boolean).join(' ');
+  function formatEuro(n) {
+    const num = Number(n) || 0;
+    const cents = Math.round(num * 100) % 100 !== 0;
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: cents ? 2 : 0,
+      maximumFractionDigits: cents ? 2 : 0
+    }).format(num);
+  }
+  function formatDate(d, opts) {
+    if (!d) return '—';
+    try {
+      return new Intl.DateTimeFormat('fr-FR', opts || {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }).format(new Date(d));
+    } catch (e) {
+      return '—';
+    }
+  }
+  function daysSince(d) {
+    if (!d) return null;
+    const ms = Date.now() - new Date(d).getTime();
+    return Math.floor(ms / 86400000);
+  }
+  function relativeDays(d) {
+    const n = daysSince(d);
+    if (n === null) return '';
+    if (n <= 0) return "aujourd'hui";
+    if (n === 1) return 'hier';
+    return 'il y a ' + n + ' jours';
+  }
+  function formatPhone(value) {
+    const digits = (value || '').replace(/\D/g, '').slice(0, 10);
+    return digits.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+  }
+  function slugifyName(name) {
+    return (name || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+  function nameToEmail(name) {
+    return slugifyName(name) + '@synagogue-charenton.fr';
+  }
+  function telHref(phone) {
+    return 'tel:' + (phone || '').replace(/\s/g, '');
+  }
+  function buildSmsHref(donation) {
+    const phone = (donation.telephone || '').replace(/\s/g, '');
+    const prenom = (donation.nom_donateur || '').split(' ')[0] || donation.nom_donateur || '';
+    const motif = donation.motif ? ' pour ' + donation.motif : '';
+    const texte = 'Cher ' + prenom + ', la synagogue de Charenton vous remercie pour votre engagement de ' + formatEuro(donation.montant) + motif + '. Vous pouvez régulariser à votre convenance. Chabbat Chalom 🕯️';
+    return 'sms:' + phone + '?body=' + encodeURIComponent(texte);
+  }
+  function generatePassword() {
+    const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const b = 'abcdefghijkmnpqrstuvwxyz';
+    const c = '23456789';
+    const s = '!@#$%&*';
+    const pick = (set, n) => Array.from({
+      length: n
+    }, () => set[Math.floor(Math.random() * set.length)]).join('');
+    const raw = (pick(a, 2) + pick(b, 5) + pick(c, 3) + pick(s, 1)).split('');
+    for (let i = raw.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [raw[i], raw[j]] = [raw[j], raw[i]];
+    }
+    return raw.join('');
+  }
+  function exportCSV(headers, rows, filename) {
+    const esc = v => {
+      const str = v === null || v === undefined ? '' : String(v);
+      return /[",;\n\r]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+    };
+    const lines = [headers.join(';')].concat(rows.map(r => r.map(esc).join(';')));
+    const blob = new Blob(['﻿' + lines.join('\r\n')], {
+      type: 'text/csv;charset=utf-8;'
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function todayISO() {
+    return new Date().toISOString().slice(0, 10);
+  }
+  function authErrorMessage(error) {
+    const m = (error && error.message ? error.message : '').toLowerCase();
+    if (m.includes('invalid login')) return 'Nom ou mot de passe incorrect. Vérifiez votre saisie.';
+    if (m.includes('email not confirmed')) return "Ce compte n'est pas encore confirmé. Contactez l'administrateur.";
+    if (m.includes('rate limit') || m.includes('too many')) return 'Trop de tentatives. Merci de patienter un instant.';
+    if (m.includes('network') || m.includes('fetch')) return 'Connexion au serveur impossible. Vérifiez votre connexion internet.';
+    if (m.includes('user already registered') || m.includes('already been registered')) return 'Un compte existe déjà sous ce nom.';
+    if (m.includes('password') && m.includes('6')) return 'Le mot de passe doit contenir au moins 6 caractères.';
+    return error && error.message ? error.message : 'Une erreur est survenue. Merci de réessayer.';
+  }
+
+  /* ====================== HOOKS ====================== */
+  function useMediaQuery(query) {
+    const [matches, setMatches] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches);
+    useEffect(() => {
+      const mql = window.matchMedia(query);
+      const handler = e => setMatches(e.matches);
+      setMatches(mql.matches);
+      mql.addEventListener('change', handler);
+      return () => mql.removeEventListener('change', handler);
+    }, [query]);
+    return matches;
+  }
+  function useOnline() {
+    const [online, setOnline] = useState(() => typeof navigator === 'undefined' ? true : navigator.onLine !== false);
+    useEffect(() => {
+      const on = () => setOnline(true);
+      const off = () => setOnline(false);
+      window.addEventListener('online', on);
+      window.addEventListener('offline', off);
+      return () => {
+        window.removeEventListener('online', on);
+        window.removeEventListener('offline', off);
+      };
+    }, []);
+    return online;
+  }
+
+  /* ====================== FLAMME (SVG ORIGINAL) ====================== */
+  function Flame({
+    size = 96,
+    className = '',
+    animated = false
+  }) {
+    return /*#__PURE__*/React.createElement("svg", {
+      width: size,
+      height: size,
+      viewBox: "0 0 320 400",
+      className: cx(className, animated && 'flame-anim'),
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
+      id: "fl-gold",
+      x1: "0.3",
+      y1: "1",
+      x2: "0.66",
+      y2: "0.05"
+    }, /*#__PURE__*/React.createElement("stop", {
+      offset: "0",
+      stopColor: "#a9823f"
+    }), /*#__PURE__*/React.createElement("stop", {
+      offset: "0.55",
+      stopColor: "#cba86a"
+    }), /*#__PURE__*/React.createElement("stop", {
+      offset: "1",
+      stopColor: "#ecd9a8"
+    }))), /*#__PURE__*/React.createElement("path", {
+      d: "M167 36 C 173 116, 191 184, 217 262 C 237 308, 257 330, 257 366 C 257 420, 215 462, 161 466 C 107 462, 65 420, 65 366 C 65 332, 81 312, 101 272 C 125 200, 153 118, 167 36 Z",
+      fill: "url(#fl-gold)"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M165 152 C 168 200, 179 240, 195 286 C 207 313, 219 327, 219 349 C 219 381, 193 408, 161 411 C 129 408, 103 381, 103 349 C 103 328, 113 314, 125 289 C 139 248, 156 200, 165 152 Z",
+      fill: "#faf6ef",
+      fillOpacity: "0.95"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M163 256 C 165 280, 170 302, 178 326 C 184 339, 190 346, 190 358 C 190 374, 177 387, 161 388 C 145 387, 132 374, 132 358 C 132 347, 137 341, 143 328 C 150 306, 159 280, 163 256 Z",
+      fill: "url(#fl-gold)"
+    }));
+  }
+  function FlameWatermark() {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "flame-watermark",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 320 400",
+      className: "breathe",
+      width: "100%",
+      height: "100%"
+    }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
+      id: "fl-wm",
+      x1: "0.2",
+      y1: "1",
+      x2: "0.7",
+      y2: "0"
+    }, /*#__PURE__*/React.createElement("stop", {
+      offset: "0",
+      stopColor: "#7c2d3a"
+    }), /*#__PURE__*/React.createElement("stop", {
+      offset: "1",
+      stopColor: "#c9a35a"
+    }))), /*#__PURE__*/React.createElement("path", {
+      d: "M167 36 C 173 116, 191 184, 217 262 C 237 308, 257 330, 257 366 C 257 420, 215 462, 161 466 C 107 462, 65 420, 65 366 C 65 332, 81 312, 101 272 C 125 200, 153 118, 167 36 Z",
+      fill: "url(#fl-wm)"
+    })));
+  }
+  function Loader({
+    label,
+    full
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: cx('flex flex-col items-center justify-center gap-4', full ? 'min-h-screen' : 'py-16')
+    }, /*#__PURE__*/React.createElement(Flame, {
+      size: 56,
+      className: "flicker"
+    }), /*#__PURE__*/React.createElement("p", {
+      className: "font-serif italic text-ink-soft text-sm"
+    }, label || 'Un instant…'));
+  }
+
+  /* ====================== TOASTS ====================== */
+  const ToastContext = createContext(() => {});
+  const useToast = () => useContext(ToastContext);
+  function ToastProvider({
+    children
+  }) {
+    const [toasts, setToasts] = useState([]);
+    const addToast = useCallback((message, type) => {
+      const id = Math.random().toString(36).slice(2);
+      setToasts(t => t.concat([{
+        id,
+        message,
+        type: type || 'success'
+      }]));
+      setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4200);
+    }, []);
+    return /*#__PURE__*/React.createElement(ToastContext.Provider, {
+      value: addToast
+    }, children, /*#__PURE__*/React.createElement("div", {
+      className: "toast-wrap safe-top"
+    }, toasts.map(t => /*#__PURE__*/React.createElement("div", {
+      key: t.id,
+      className: cx('toast-item', t.type === 'error' && 'toast-error', t.type === 'info' && 'toast-info')
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: t.type === 'error' ? 'alert-circle' : t.type === 'info' ? 'info' : 'check-circle',
+      size: 20,
+      className: "shrink-0 mt-0.5"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "leading-snug"
+    }, t.message)))));
+  }
+
+  /* ====================== CONFETTI OR ====================== */
+  function Confetti({
+    fireKey
+  }) {
+    const [pieces, setPieces] = useState([]);
+    useEffect(() => {
+      if (!fireKey) return;
+      const shades = ['#b8924a', '#d4b878', '#c9a35a', '#ecd9a8'];
+      const arr = Array.from({
+        length: 52
+      }, (_, i) => ({
+        id: i + '-' + fireKey,
+        left: Math.random() * 100,
+        delay: Math.random() * 0.35,
+        dur: 1.9 + Math.random() * 1.6,
+        rot: Math.random() * 720 - 360,
+        w: 6 + Math.random() * 9,
+        h: 4 + Math.random() * 6,
+        shade: shades[Math.floor(Math.random() * shades.length)],
+        drift: (Math.random() - 0.5) * 220
+      }));
+      setPieces(arr);
+      const t = setTimeout(() => setPieces([]), 3700);
+      return () => clearTimeout(t);
+    }, [fireKey]);
+    if (!pieces.length) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "confetti-layer",
+      "aria-hidden": "true"
+    }, pieces.map(p => /*#__PURE__*/React.createElement("span", {
+      key: p.id,
+      className: "confetti-piece",
+      style: {
+        left: p.left + '%',
+        width: p.w + 'px',
+        height: p.h + 'px',
+        background: p.shade,
+        animationDelay: p.delay + 's',
+        animationDuration: p.dur + 's',
+        ['--drift']: p.drift + 'px',
+        ['--rot']: p.rot + 'deg'
+      }
+    })));
+  }
+
+  /* ====================== CHAMPS DE FORMULAIRE ====================== */
+  function Field({
+    label,
+    children,
+    hint,
+    required
+  }) {
+    return /*#__PURE__*/React.createElement("label", {
+      className: "block"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "block text-sm font-medium text-ink mb-1.5"
+    }, label, required && /*#__PURE__*/React.createElement("span", {
+      className: "text-bordeaux"
+    }, " *")), children, hint && /*#__PURE__*/React.createElement("span", {
+      className: "block text-xs text-ink-soft mt-1"
+    }, hint));
+  }
+  const inputClass = 'w-full min-h-[48px] px-4 rounded-xl bg-white border border-gold-light/60 ' + 'text-ink text-base placeholder:text-ink-soft/50 outline-none transition ' + 'focus:border-bordeaux focus:ring-2 focus:ring-bordeaux/15';
+
+  /* ====================== ÉCRAN HORS-LIGNE ====================== */
+  function OfflineScreen() {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "min-h-screen flex flex-col items-center justify-center px-8 text-center bg-cream"
+    }, /*#__PURE__*/React.createElement(FlameWatermark, null), /*#__PURE__*/React.createElement("div", {
+      className: "relative z-10 max-w-sm"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "mx-auto w-20 h-20 rounded-2xl bg-bordeaux/8 flex items-center justify-center mb-6"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "wifi-off",
+      size: 38,
+      className: "text-bordeaux"
+    })), /*#__PURE__*/React.createElement("h1", {
+      className: "font-serif text-2xl text-ink mb-2"
+    }, "Connexion requise"), /*#__PURE__*/React.createElement("p", {
+      className: "text-ink-soft leading-relaxed text-sm"
+    }, "L'application est bien install\xE9e, mais la gestion des dons n\xE9cessite une connexion internet pour atteindre la base s\xE9curis\xE9e. Reconnectez-vous, puis r\xE9essayez."), /*#__PURE__*/React.createElement("button", {
+      onClick: () => window.location.reload(),
+      className: "mt-7 inline-flex items-center gap-2 px-6 min-h-[48px] rounded-xl bg-bordeaux text-cream font-medium tappable"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "refresh-cw",
+      size: 18
+    }), " R\xE9essayer")), /*#__PURE__*/React.createElement("p", {
+      className: "watermark-text"
+    }, "\u05D0\u05E9 \u05E9\u05DC\u05D9"));
+  }
+
+  /* ====================== ÉCRAN COMPTE DÉSACTIVÉ ====================== */
+  function DisabledScreen({
+    onSignOut
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "min-h-screen flex flex-col items-center justify-center px-8 text-center bg-cream"
+    }, /*#__PURE__*/React.createElement(FlameWatermark, null), /*#__PURE__*/React.createElement("div", {
+      className: "relative z-10 max-w-sm"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "mx-auto w-20 h-20 rounded-2xl bg-terracotta/10 flex items-center justify-center mb-6"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "lock",
+      size: 36,
+      className: "text-terracotta"
+    })), /*#__PURE__*/React.createElement("h1", {
+      className: "font-serif text-2xl text-ink mb-2"
+    }, "Acc\xE8s suspendu"), /*#__PURE__*/React.createElement("p", {
+      className: "text-ink-soft leading-relaxed text-sm"
+    }, "Votre compte a \xE9t\xE9 d\xE9sactiv\xE9. Merci de contacter un administrateur de la synagogue pour r\xE9tablir votre acc\xE8s."), /*#__PURE__*/React.createElement("button", {
+      onClick: onSignOut,
+      className: "mt-7 inline-flex items-center gap-2 px-6 min-h-[48px] rounded-xl border border-gold-light text-ink font-medium tappable bg-white"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "log-out",
+      size: 18
+    }), " Se d\xE9connecter")), /*#__PURE__*/React.createElement("p", {
+      className: "watermark-text"
+    }, "\u05D0\u05E9 \u05E9\u05DC\u05D9"));
+  }
+
+  /* ====================== CONNEXION ====================== */
+  function LoginScreen() {
+    const [name, setName] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPwd, setShowPwd] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [showHelp, setShowHelp] = useState(false);
+    const submit = async e => {
+      e.preventDefault();
+      setError('');
+      const slug = slugifyName(name);
+      if (!slug) {
+        setError('Merci d\'indiquer votre nom.');
+        return;
+      }
+      if (!password) {
+        setError('Merci d\'indiquer votre mot de passe.');
+        return;
+      }
+      setLoading(true);
+      const {
+        error
+      } = await sb.auth.signInWithPassword({
+        email: slug + '@synagogue-charenton.fr',
+        password: password
+      });
+      setLoading(false);
+      if (error) {
+        setError(authErrorMessage(error));
+        return;
+      }
+    };
+    return /*#__PURE__*/React.createElement("div", {
+      className: "min-h-screen flex flex-col bg-cream relative overflow-hidden"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "login-glow",
+      "aria-hidden": "true"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "flex-1 flex flex-col items-center justify-center px-6 py-10 relative z-10 safe-top safe-bottom"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "w-full max-w-sm"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex flex-col items-center text-center mb-8"
+    }, /*#__PURE__*/React.createElement(Flame, {
+      size: 104,
+      animated: true
+    }), /*#__PURE__*/React.createElement("h1", {
+      className: "font-serif text-[26px] leading-tight text-ink mt-3"
+    }, "Synagogue de Charenton"), /*#__PURE__*/React.createElement("p", {
+      className: "text-ink-soft text-sm mt-1 font-serif italic"
+    }, "Gestion des dons et promesses")), /*#__PURE__*/React.createElement("form", {
+      onSubmit: submit,
+      className: "bg-surface rounded-2xl border border-gold-light/50 card-shadow p-6 sm:p-7"
+    }, /*#__PURE__*/React.createElement("h2", {
+      className: "font-serif text-xl text-ink mb-1"
+    }, "Bienvenue"), /*#__PURE__*/React.createElement("p", {
+      className: "text-ink-soft text-sm mb-5"
+    }, "Identifiez-vous avec votre nom pour acc\xE9der au registre."), /*#__PURE__*/React.createElement("div", {
+      className: "space-y-4"
+    }, /*#__PURE__*/React.createElement(Field, {
+      label: "Votre nom",
+      hint: "Le nom transmis par la synagogue (pr\xE9nom, ou pr\xE9nom et nom)."
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "text",
+      autoComplete: "username",
+      autoCapitalize: "words",
+      className: inputClass,
+      placeholder: "ex. : David Cohen",
+      value: name,
+      onChange: e => setName(e.target.value)
+    })), /*#__PURE__*/React.createElement(Field, {
+      label: "Mot de passe"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "relative"
+    }, /*#__PURE__*/React.createElement("input", {
+      type: showPwd ? 'text' : 'password',
+      autoComplete: "current-password",
+      className: inputClass + ' pr-12',
+      placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+      value: password,
+      onChange: e => setPassword(e.target.value)
+    }), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => setShowPwd(v => !v),
+      className: "absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-ink-soft tappable rounded-lg",
+      "aria-label": showPwd ? 'Masquer' : 'Afficher'
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: showPwd ? 'eye-off' : 'eye',
+      size: 20
+    }))))), error && /*#__PURE__*/React.createElement("div", {
+      className: "mt-4 flex items-start gap-2 text-sm text-red-alert bg-red-alert/8 rounded-xl px-3 py-2.5"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "alert-circle",
+      size: 18,
+      className: "shrink-0 mt-0.5"
+    }), /*#__PURE__*/React.createElement("span", null, error)), /*#__PURE__*/React.createElement("button", {
+      type: "submit",
+      disabled: loading,
+      className: "mt-6 w-full min-h-[52px] rounded-xl bg-bordeaux text-cream font-medium text-base tappable flex items-center justify-center gap-2 disabled:opacity-60"
+    }, loading ? /*#__PURE__*/React.createElement(Flame, {
+      size: 26,
+      className: "flicker"
+    }) : 'Se connecter'), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => setShowHelp(v => !v),
+      className: "mt-4 w-full text-center text-sm text-bordeaux/90 font-medium tappable py-2"
+    }, "Mot de passe oubli\xE9 ?"), showHelp && /*#__PURE__*/React.createElement("div", {
+      className: "mt-1 flex items-start gap-2 text-xs text-ink-soft bg-cream rounded-xl px-3 py-2.5 border border-gold-light/40"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "info",
+      size: 15,
+      className: "shrink-0 mt-0.5 text-gold-dark"
+    }), /*#__PURE__*/React.createElement("span", null, "Merci de contacter un administrateur de la synagogue : il pourra r\xE9initialiser votre mot de passe."))), /*#__PURE__*/React.createElement("p", {
+      className: "text-center text-xs text-ink-soft/70 mt-6 font-serif italic"
+    }, "L'acc\xE8s est r\xE9serv\xE9 aux membres habilit\xE9s."))), /*#__PURE__*/React.createElement("p", {
+      className: "watermark-text"
+    }, "\u05D0\u05E9 \u05E9\u05DC\u05D9"));
+  }
+
+  /* ====================== NOUVEAU MOT DE PASSE (récupération) ====================== */
+  function RecoveryScreen({
+    onDone
+  }) {
+    const toast = useToast();
+    const [password, setPassword] = useState('');
+    const [confirm, setConfirm] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const submit = async e => {
+      e.preventDefault();
+      setError('');
+      if (password.length < 8) {
+        setError('Le mot de passe doit contenir au moins 8 caractères.');
+        return;
+      }
+      if (password !== confirm) {
+        setError('Les deux mots de passe ne correspondent pas.');
+        return;
+      }
+      setLoading(true);
+      const {
+        error
+      } = await sb.auth.updateUser({
+        password
+      });
+      setLoading(false);
+      if (error) {
+        setError(authErrorMessage(error));
+        return;
+      }
+      toast('Votre mot de passe a été mis à jour.', 'success');
+      onDone();
+    };
+    return /*#__PURE__*/React.createElement("div", {
+      className: "min-h-screen flex flex-col items-center justify-center bg-cream px-6 relative"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "login-glow",
+      "aria-hidden": "true"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "w-full max-w-sm relative z-10 safe-top safe-bottom"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex flex-col items-center text-center mb-6"
+    }, /*#__PURE__*/React.createElement(Flame, {
+      size: 84,
+      animated: true
+    }), /*#__PURE__*/React.createElement("h1", {
+      className: "font-serif text-2xl text-ink mt-3"
+    }, "Nouveau mot de passe")), /*#__PURE__*/React.createElement("form", {
+      onSubmit: submit,
+      className: "bg-surface rounded-2xl border border-gold-light/50 card-shadow p-6 space-y-4"
+    }, /*#__PURE__*/React.createElement(Field, {
+      label: "Nouveau mot de passe",
+      required: true
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "password",
+      className: inputClass,
+      value: password,
+      onChange: e => setPassword(e.target.value),
+      placeholder: "Au moins 8 caract\xE8res"
+    })), /*#__PURE__*/React.createElement(Field, {
+      label: "Confirmer le mot de passe",
+      required: true
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "password",
+      className: inputClass,
+      value: confirm,
+      onChange: e => setConfirm(e.target.value),
+      placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+    })), error && /*#__PURE__*/React.createElement("div", {
+      className: "flex items-start gap-2 text-sm text-red-alert bg-red-alert/8 rounded-xl px-3 py-2.5"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "alert-circle",
+      size: 18,
+      className: "shrink-0 mt-0.5"
+    }), /*#__PURE__*/React.createElement("span", null, error)), /*#__PURE__*/React.createElement("button", {
+      type: "submit",
+      disabled: loading,
+      className: "w-full min-h-[52px] rounded-xl bg-bordeaux text-cream font-medium tappable flex items-center justify-center disabled:opacity-60"
+    }, loading ? /*#__PURE__*/React.createElement(Flame, {
+      size: 26,
+      className: "flicker"
+    }) : 'Enregistrer'))));
+  }
+
+  /* ====================== MODALE GÉNÉRIQUE ====================== */
+  function Modal({
+    open,
+    onClose,
+    title,
+    children,
+    footer,
+    isMobile
+  }) {
+    useEffect(() => {
+      if (!open) return;
+      const onKey = e => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', onKey);
+      document.body.style.overflow = 'hidden';
+      return () => {
+        window.removeEventListener('keydown', onKey);
+        document.body.style.overflow = '';
+      };
+    }, [open, onClose]);
+    if (!open) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "modal-backdrop",
+      onClick: onClose
+    }, /*#__PURE__*/React.createElement("div", {
+      className: cx('modal-panel', isMobile ? 'modal-panel-mobile' : 'modal-panel-centered'),
+      onClick: e => e.stopPropagation(),
+      role: "dialog",
+      "aria-modal": "true"
+    }, isMobile && /*#__PURE__*/React.createElement("div", {
+      className: "drag-handle"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-between px-5 sm:px-6 pt-1 pb-3 sm:pt-4"
+    }, /*#__PURE__*/React.createElement("h2", {
+      className: "font-serif text-xl text-ink"
+    }, title), /*#__PURE__*/React.createElement("button", {
+      onClick: onClose,
+      "aria-label": "Fermer",
+      className: "w-10 h-10 -mr-2 flex items-center justify-center text-ink-soft rounded-xl tappable"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "x",
+      size: 22
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "px-5 sm:px-6 overflow-y-auto modal-body"
+    }, children), footer && /*#__PURE__*/React.createElement("div", {
+      className: "px-5 sm:px-6 py-4 border-t border-gold-light/40 bg-cream/40 modal-footer safe-bottom"
+    }, footer)));
+  }
+
+  /* ====================== MODALE PROMESSE / DON ====================== */
+  function DonationModal({
+    open,
+    onClose,
+    onSaved,
+    editing,
+    userId,
+    isMobile
+  }) {
+    const toast = useToast();
+    const blank = {
+      nom_donateur: '',
+      telephone: '',
+      email: '',
+      montant: '',
+      motif: 'Général',
+      notes: '',
+      paye: false
+    };
+    const [form, setForm] = useState(blank);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    useEffect(() => {
+      if (!open) return;
+      if (editing) {
+        setForm({
+          nom_donateur: editing.nom_donateur || '',
+          telephone: editing.telephone || '',
+          email: editing.email || '',
+          montant: editing.montant != null ? String(editing.montant) : '',
+          motif: editing.motif || 'Général',
+          notes: editing.notes || '',
+          paye: editing.statut === 'paye'
+        });
+      } else {
+        setForm(blank);
+      }
+      setError('');
+    }, [open, editing]);
+    const set = (k, v) => setForm(f => Object.assign({}, f, {
+      [k]: v
+    }));
+    const submit = async e => {
+      e.preventDefault();
+      setError('');
+      const nom = form.nom_donateur.trim();
+      const montant = parseFloat(String(form.montant).replace(',', '.'));
+      if (!nom) {
+        setError('Le nom du donateur est obligatoire.');
+        return;
+      }
+      if (!montant || montant <= 0) {
+        setError('Merci d\'indiquer un montant valide.');
+        return;
+      }
+      const nowISO = new Date().toISOString();
+      const payload = {
+        nom_donateur: nom,
+        telephone: form.telephone.trim() || null,
+        email: form.email.trim() || null,
+        montant: montant,
+        motif: form.motif || null,
+        notes: form.notes.trim() || null,
+        statut: form.paye ? 'paye' : 'promesse'
+      };
+      setLoading(true);
+      let result;
+      if (editing) {
+        if (form.paye && editing.statut !== 'paye') payload.date_paiement = nowISO;
+        if (!form.paye && editing.statut === 'paye') payload.date_paiement = null;
+        result = await sb.from('donations').update(payload).eq('id', editing.id).select().single();
+      } else {
+        payload.created_by = userId;
+        if (form.paye) payload.date_paiement = nowISO;
+        result = await sb.from('donations').insert(payload).select().single();
+      }
+      setLoading(false);
+      if (result.error) {
+        setError('Enregistrement impossible : ' + result.error.message);
+        return;
+      }
+      toast(editing ? 'Modifications enregistrées, merci.' : form.paye ? 'Don enregistré avec succès, merci.' : 'Promesse enregistrée avec succès, merci.', 'success');
+      onSaved(result.data, editing ? 'update' : 'insert', !editing && form.paye);
+      onClose();
+    };
+    const footer = /*#__PURE__*/React.createElement("div", {
+      className: "flex gap-3"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: onClose,
+      className: "flex-1 min-h-[50px] rounded-xl border border-gold-light text-ink font-medium tappable bg-white"
+    }, "Annuler"), /*#__PURE__*/React.createElement("button", {
+      type: "submit",
+      form: "donation-form",
+      disabled: loading,
+      className: "flex-1 min-h-[50px] rounded-xl bg-bordeaux text-cream font-medium tappable flex items-center justify-center gap-2 disabled:opacity-60"
+    }, loading ? /*#__PURE__*/React.createElement(Flame, {
+      size: 24,
+      className: "flicker"
+    }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+      name: "check",
+      size: 18
+    }), " Enregistrer")));
+    return /*#__PURE__*/React.createElement(Modal, {
+      open: open,
+      onClose: onClose,
+      isMobile: isMobile,
+      footer: footer,
+      title: editing ? 'Modifier' : 'Nouvelle promesse de don'
+    }, /*#__PURE__*/React.createElement("form", {
+      id: "donation-form",
+      onSubmit: submit,
+      className: "space-y-4 pb-2"
+    }, /*#__PURE__*/React.createElement(Field, {
+      label: "Nom du donateur",
+      required: true
+    }, /*#__PURE__*/React.createElement("input", {
+      className: inputClass,
+      value: form.nom_donateur,
+      autoFocus: !isMobile,
+      onChange: e => set('nom_donateur', e.target.value),
+      placeholder: "Pr\xE9nom et nom"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "grid grid-cols-1 sm:grid-cols-2 gap-4"
+    }, /*#__PURE__*/React.createElement(Field, {
+      label: "T\xE9l\xE9phone"
+    }, /*#__PURE__*/React.createElement("input", {
+      className: inputClass,
+      type: "tel",
+      inputMode: "numeric",
+      value: form.telephone,
+      placeholder: "06 12 34 56 78",
+      onChange: e => set('telephone', formatPhone(e.target.value))
+    })), /*#__PURE__*/React.createElement(Field, {
+      label: "Email"
+    }, /*#__PURE__*/React.createElement("input", {
+      className: inputClass,
+      type: "email",
+      inputMode: "email",
+      value: form.email,
+      placeholder: "donateur@exemple.fr",
+      onChange: e => set('email', e.target.value)
+    }))), /*#__PURE__*/React.createElement(Field, {
+      label: "Montant",
+      required: true
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "relative"
+    }, /*#__PURE__*/React.createElement("input", {
+      className: inputClass + ' montant-input pr-10',
+      type: "text",
+      inputMode: "decimal",
+      value: form.montant,
+      placeholder: "0",
+      onChange: e => set('montant', e.target.value.replace(/[^0-9.,]/g, ''))
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "absolute right-4 top-1/2 -translate-y-1/2 font-serif text-2xl text-gold pointer-events-none"
+    }, "\u20AC"))), /*#__PURE__*/React.createElement(Field, {
+      label: "Motif"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "relative"
+    }, /*#__PURE__*/React.createElement("select", {
+      className: inputClass + ' appearance-none pr-10',
+      value: form.motif,
+      onChange: e => set('motif', e.target.value)
+    }, MOTIFS.map(m => /*#__PURE__*/React.createElement("option", {
+      key: m,
+      value: m
+    }, m))), /*#__PURE__*/React.createElement(Icon, {
+      name: "chevron-down",
+      size: 18,
+      className: "absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none"
+    }))), /*#__PURE__*/React.createElement(Field, {
+      label: "Notes"
+    }, /*#__PURE__*/React.createElement("textarea", {
+      className: inputClass + ' py-3 min-h-[88px] resize-none',
+      rows: 3,
+      value: form.notes,
+      placeholder: "Observations, contexte, \xE9ch\xE9ance souhait\xE9e\u2026",
+      onChange: e => set('notes', e.target.value)
+    })), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => set('paye', !form.paye),
+      className: cx('w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3.5 border tappable transition', form.paye ? 'bg-sage/10 border-sage/50' : 'bg-white border-gold-light/60')
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "flex items-center gap-2.5"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: form.paye ? 'check-circle' : 'clock',
+      size: 20,
+      className: form.paye ? 'text-sage' : 'text-ink-soft'
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "text-sm font-medium text-ink text-left"
+    }, form.paye ? 'Don déjà reçu' : 'Déjà payé ?')), /*#__PURE__*/React.createElement("span", {
+      className: cx('toggle', form.paye && 'toggle-on')
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "toggle-knob"
+    }))), error && /*#__PURE__*/React.createElement("div", {
+      className: "flex items-start gap-2 text-sm text-red-alert bg-red-alert/8 rounded-xl px-3 py-2.5"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "alert-circle",
+      size: 18,
+      className: "shrink-0 mt-0.5"
+    }), /*#__PURE__*/React.createElement("span", null, error))));
+  }
+
+  /* ====================== BOTTOM SHEET D'ACTIONS ====================== */
+  function ActionSheet({
+    donation,
+    onClose,
+    actions
+  }) {
+    useEffect(() => {
+      if (!donation) return;
+      const onKey = e => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', onKey);
+      document.body.style.overflow = 'hidden';
+      return () => {
+        window.removeEventListener('keydown', onKey);
+        document.body.style.overflow = '';
+      };
+    }, [donation, onClose]);
+    if (!donation) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "modal-backdrop",
+      onClick: onClose
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "action-sheet",
+      onClick: e => e.stopPropagation(),
+      role: "dialog",
+      "aria-modal": "true"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "drag-handle"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "px-5 pb-2 pt-1"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "font-serif text-lg text-ink truncate"
+    }, donation.nom_donateur), /*#__PURE__*/React.createElement("p", {
+      className: "text-sm text-ink-soft"
+    }, formatEuro(donation.montant), donation.motif ? ' · ' + donation.motif : '')), /*#__PURE__*/React.createElement("div", {
+      className: "py-2"
+    }, actions.filter(Boolean).map(a => /*#__PURE__*/React.createElement("button", {
+      key: a.key,
+      onClick: () => {
+        onClose();
+        a.run();
+      },
+      className: cx('w-full flex items-center gap-3.5 px-5 py-3.5 text-left tappable', a.danger ? 'text-red-alert' : 'text-ink')
+    }, /*#__PURE__*/React.createElement("span", {
+      className: cx('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', a.danger ? 'bg-red-alert/10' : 'bg-cream')
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: a.icon,
+      size: 19,
+      className: a.tone
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "font-medium"
+    }, a.label)))), /*#__PURE__*/React.createElement("div", {
+      className: "safe-bottom"
+    })));
+  }
+
+  /* ====================== CARTE PROMESSE ====================== */
+  function PromesseCard({
+    donation,
+    isMobile,
+    isAdmin,
+    onAction,
+    onOpenSheet
+  }) {
+    const [dx, setDx] = useState(0);
+    const start = useRef(null);
+    const moved = useRef(false);
+    const days = daysSince(donation.date_creation);
+    const relance = donation.date_relance ? daysSince(donation.date_relance) : null;
+    let badge = null;
+    if (days != null && days > 30) badge = {
+      txt: days + ' j',
+      cls: 'badge-red'
+    };else if (days != null && days > 15) badge = {
+      txt: days + ' j',
+      cls: 'badge-amber'
+    };else if (days != null) badge = {
+      txt: days + ' j',
+      cls: 'badge-neutral'
+    };
+    const onTouchStart = e => {
+      if (!isMobile) return;
+      start.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+      };
+      moved.current = false;
+    };
+    const onTouchMove = e => {
+      if (!isMobile || !start.current) return;
+      const cxx = e.touches[0].clientX - start.current.x;
+      const cyy = e.touches[0].clientY - start.current.y;
+      if (Math.abs(cxx) > Math.abs(cyy) && Math.abs(cxx) > 6) {
+        moved.current = true;
+        setDx(Math.max(-130, Math.min(130, cxx)));
+      }
+    };
+    const onTouchEnd = () => {
+      if (!isMobile) return;
+      if (dx > 78) onAction('pay', donation);else if (dx < -78) onAction('relance', donation);
+      setDx(0);
+      start.current = null;
+    };
+    const onCardClick = () => {
+      if (moved.current) {
+        moved.current = false;
+        return;
+      }
+      if (isMobile) onOpenSheet(donation);
+    };
+    return /*#__PURE__*/React.createElement("div", {
+      className: "swipe-wrap"
+    }, isMobile && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "swipe-bg swipe-bg-left",
+      style: {
+        opacity: dx > 20 ? 1 : 0
+      }
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "check-circle",
+      size: 22
+    }), /*#__PURE__*/React.createElement("span", null, "Marquer pay\xE9")), /*#__PURE__*/React.createElement("div", {
+      className: "swipe-bg swipe-bg-right",
+      style: {
+        opacity: dx < -20 ? 1 : 0
+      }
+    }, /*#__PURE__*/React.createElement("span", null, "Relancer"), /*#__PURE__*/React.createElement(Icon, {
+      name: "bell",
+      size: 22
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "card promesse-card",
+      onClick: onCardClick,
+      onTouchStart: onTouchStart,
+      onTouchMove: onTouchMove,
+      onTouchEnd: onTouchEnd,
+      style: {
+        transform: dx ? 'translateX(' + dx + 'px)' : '',
+        transition: dx ? 'none' : 'transform .25s ease-out'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-start justify-between gap-3"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "min-w-0 flex-1"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "font-serif text-lg text-ink leading-snug truncate"
+    }, donation.nom_donateur), /*#__PURE__*/React.createElement("p", {
+      className: "montant-display text-bordeaux mt-0.5"
+    }, formatEuro(donation.montant))), badge && /*#__PURE__*/React.createElement("span", {
+      className: cx('badge', badge.cls)
+    }, badge.txt)), /*#__PURE__*/React.createElement("div", {
+      className: "flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm text-ink-soft"
+    }, donation.motif && /*#__PURE__*/React.createElement("span", {
+      className: "motif-chip"
+    }, donation.motif), /*#__PURE__*/React.createElement("span", {
+      className: "inline-flex items-center gap-1"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "calendar",
+      size: 14
+    }), formatDate(donation.date_creation, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-between gap-2 mt-2"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "text-xs text-ink-soft/90"
+    }, relance != null ? /*#__PURE__*/React.createElement("span", {
+      className: "inline-flex items-center gap-1 text-bordeaux/80"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "bell",
+      size: 13
+    }), " Relanc\xE9 ", relativeDays(donation.date_relance)) : /*#__PURE__*/React.createElement("span", {
+      className: "italic"
+    }, "Jamais relanc\xE9 \xB7 promesse ", relativeDays(donation.date_creation))), isMobile ? /*#__PURE__*/React.createElement("button", {
+      onClick: e => {
+        e.stopPropagation();
+        onOpenSheet(donation);
+      },
+      className: "w-9 h-9 -mr-1 rounded-xl flex items-center justify-center text-ink-soft tappable shrink-0",
+      "aria-label": "Actions"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "more-horizontal",
+      size: 20
+    })) : null), !isMobile && /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-1 mt-3 pt-3 border-t border-gold-light/35"
+    }, /*#__PURE__*/React.createElement(CardBtn, {
+      icon: "check-circle",
+      label: "Marquer pay\xE9",
+      tone: "text-sage",
+      onClick: () => onAction('pay', donation)
+    }), /*#__PURE__*/React.createElement(CardBtn, {
+      icon: "bell",
+      label: "Relanc\xE9 aujourd'hui",
+      tone: "text-amber",
+      onClick: () => onAction('relance', donation)
+    }), /*#__PURE__*/React.createElement(CardBtn, {
+      icon: "message-square",
+      label: "Envoyer un SMS",
+      disabled: !donation.telephone,
+      onClick: () => onAction('sms', donation)
+    }), /*#__PURE__*/React.createElement(CardBtn, {
+      icon: "phone-call",
+      label: "Appeler",
+      disabled: !donation.telephone,
+      onClick: () => onAction('call', donation)
+    }), /*#__PURE__*/React.createElement(CardBtn, {
+      icon: "copy",
+      label: "Copier le t\xE9l\xE9phone",
+      disabled: !donation.telephone,
+      onClick: () => onAction('copy', donation)
+    }), /*#__PURE__*/React.createElement(CardBtn, {
+      icon: "pencil",
+      label: "Modifier",
+      onClick: () => onAction('edit', donation)
+    }), isAdmin && /*#__PURE__*/React.createElement(CardBtn, {
+      icon: "trash-2",
+      label: "Supprimer",
+      tone: "text-red-alert",
+      onClick: () => onAction('delete', donation)
+    }))));
+  }
+  function CardBtn({
+    icon,
+    label,
+    tone,
+    onClick,
+    disabled
+  }) {
+    return /*#__PURE__*/React.createElement("button", {
+      onClick: onClick,
+      disabled: disabled,
+      title: label,
+      "aria-label": label,
+      className: cx('w-10 h-10 rounded-xl flex items-center justify-center tappable transition', 'hover:bg-cream', tone || 'text-ink-soft', disabled && 'opacity-30 pointer-events-none')
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: icon,
+      size: 19
+    }));
+  }
+
+  /* ====================== CARTE DON REÇU ====================== */
+  function DonRow({
+    donation,
+    isMobile,
+    isAdmin,
+    onAction,
+    onOpenSheet
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "card don-card",
+      onClick: () => isMobile && onOpenSheet(donation)
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-3"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "w-10 h-10 rounded-xl bg-sage/12 flex items-center justify-center shrink-0"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "check-circle",
+      size: 20,
+      className: "text-sage"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "min-w-0 flex-1"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "font-medium text-ink truncate"
+    }, donation.nom_donateur), /*#__PURE__*/React.createElement("p", {
+      className: "text-xs text-ink-soft truncate"
+    }, donation.motif ? donation.motif + ' · ' : '', formatDate(donation.date_paiement || donation.date_creation, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }))), /*#__PURE__*/React.createElement("p", {
+      className: "font-serif text-lg text-sage shrink-0"
+    }, formatEuro(donation.montant)), !isMobile && /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-1 pl-1"
+    }, /*#__PURE__*/React.createElement(CardBtn, {
+      icon: "pencil",
+      label: "Modifier",
+      onClick: () => onAction('edit', donation)
+    }), isAdmin && /*#__PURE__*/React.createElement(CardBtn, {
+      icon: "trash-2",
+      label: "Supprimer",
+      tone: "text-red-alert",
+      onClick: () => onAction('delete', donation)
+    })), isMobile && /*#__PURE__*/React.createElement(Icon, {
+      name: "chevron-right",
+      size: 18,
+      className: "text-ink-soft/50 shrink-0"
+    })));
+  }
+
+  /* ====================== KPI ====================== */
+  function KpiCards({
+    donations
+  }) {
+    const stats = useMemo(() => {
+      let recu = 0,
+        recuN = 0,
+        prom = 0,
+        promN = 0;
+      donations.forEach(d => {
+        const m = Number(d.montant) || 0;
+        if (d.statut === 'paye') {
+          recu += m;
+          recuN++;
+        } else {
+          prom += m;
+          promN++;
+        }
+      });
+      const total = recu + prom;
+      const taux = total > 0 ? Math.round(recu / total * 100) : 0;
+      return {
+        recu,
+        recuN,
+        prom,
+        promN,
+        total,
+        taux
+      };
+    }, [donations]);
+    return /*#__PURE__*/React.createElement("div", {
+      className: "kpi-grid"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "kpi-card"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "kpi-head"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "kpi-icon bg-sage/12 text-sage"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "banknote",
+      size: 20
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "kpi-label"
+    }, "Dons re\xE7us")), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-value text-sage"
+    }, formatEuro(stats.recu)), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-sub"
+    }, stats.recuN, " ", stats.recuN > 1 ? 'dons honorés' : 'don honoré')), /*#__PURE__*/React.createElement("div", {
+      className: "kpi-card kpi-card-feature"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "kpi-head"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "kpi-icon bg-amber/15 text-amber"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "scroll-text",
+      size: 20
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "kpi-label"
+    }, "Promesses en attente")), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-value text-amber"
+    }, formatEuro(stats.prom)), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-sub"
+    }, stats.promN, " ", stats.promN > 1 ? 'promesses à honorer' : 'promesse à honorer')), /*#__PURE__*/React.createElement("div", {
+      className: "kpi-card"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "kpi-head"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "kpi-icon bg-gold/15 text-gold-dark"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "trending-up",
+      size: 20
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "kpi-label"
+    }, "Total engag\xE9")), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-value text-ink"
+    }, formatEuro(stats.total)), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-sub"
+    }, stats.taux, "% des engagements honor\xE9s")));
+  }
+
+  /* ====================== VUE PROMESSES ====================== */
+  function PromessesView({
+    donations,
+    isMobile,
+    isAdmin,
+    onAction,
+    onOpenSheet,
+    searchRef
+  }) {
+    const [query, setQuery] = useState('');
+    const [filter, setFilter] = useState('tous');
+    const list = useMemo(() => {
+      let arr = donations.filter(d => d.statut === 'promesse');
+      const q = query.trim().toLowerCase();
+      if (q) arr = arr.filter(d => (d.nom_donateur || '').toLowerCase().includes(q));
+      if (filter === 'jamais') arr = arr.filter(d => !d.date_relance);else if (filter === '7') arr = arr.filter(d => daysSince(d.date_creation) > 7);else if (filter === '30') arr = arr.filter(d => daysSince(d.date_creation) > 30);
+      arr = arr.slice().sort((a, b) => new Date(a.date_creation) - new Date(b.date_creation));
+      return arr;
+    }, [donations, query, filter]);
+    const totalProm = donations.filter(d => d.statut === 'promesse').reduce((s, d) => s + (Number(d.montant) || 0), 0);
+    const chips = [{
+      k: 'tous',
+      label: 'Toutes'
+    }, {
+      k: 'jamais',
+      label: 'Jamais relancé'
+    }, {
+      k: '7',
+      label: '+ 7 jours'
+    }, {
+      k: '30',
+      label: '+ 30 jours'
+    }];
+    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-between gap-3 mb-3"
+    }, /*#__PURE__*/React.createElement("h2", {
+      className: "font-serif text-xl text-ink flex items-center gap-2"
+    }, "Promesses \xE0 relancer"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => exportPromesses(donations),
+      className: "inline-flex items-center gap-1.5 text-sm text-bordeaux font-medium tappable px-2.5 py-1.5 rounded-lg"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "download",
+      size: 16
+    }), " ", /*#__PURE__*/React.createElement("span", {
+      className: "hidden sm:inline"
+    }, "Exporter"), " CSV")), /*#__PURE__*/React.createElement("div", {
+      className: "relative mb-3"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "search",
+      size: 18,
+      className: "absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-soft"
+    }), /*#__PURE__*/React.createElement("input", {
+      ref: searchRef,
+      className: inputClass + ' pl-11',
+      placeholder: "Rechercher un donateur\u2026",
+      value: query,
+      onChange: e => setQuery(e.target.value),
+      "data-search-input": true
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "chip-row"
+    }, chips.map(c => /*#__PURE__*/React.createElement("button", {
+      key: c.k,
+      onClick: () => setFilter(c.k),
+      className: cx('chip', filter === c.k && 'chip-active')
+    }, c.label))), list.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
+      icon: "sparkles",
+      title: query || filter !== 'tous' ? 'Aucune promesse trouvée' : 'Aucune promesse en attente',
+      text: query || filter !== 'tous' ? 'Essayez de modifier votre recherche ou vos filtres.' : 'Toutes les promesses ont été honorées. Qu\'il en soit ainsi.'
+    }) : /*#__PURE__*/React.createElement("div", {
+      className: "cards-grid mt-1"
+    }, list.map(d => /*#__PURE__*/React.createElement(PromesseCard, {
+      key: d.id,
+      donation: d,
+      isMobile: isMobile,
+      isAdmin: isAdmin,
+      onAction: onAction,
+      onOpenSheet: onOpenSheet
+    }))), list.length > 0 && /*#__PURE__*/React.createElement("p", {
+      className: "text-center text-sm text-ink-soft mt-5"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "font-medium text-ink"
+    }, list.length), " promesse", list.length > 1 ? 's' : '', " affich\xE9e", list.length > 1 ? 's' : '', ' · total en attente ', /*#__PURE__*/React.createElement("span", {
+      className: "font-serif text-amber"
+    }, formatEuro(totalProm))));
+  }
+
+  /* ====================== VUE DONS REÇUS ====================== */
+  function DonsView({
+    donations,
+    isMobile,
+    isAdmin,
+    onAction,
+    onOpenSheet
+  }) {
+    const [query, setQuery] = useState('');
+    const [limit, setLimit] = useState(50);
+    const all = useMemo(() => {
+      let arr = donations.filter(d => d.statut === 'paye');
+      const q = query.trim().toLowerCase();
+      if (q) arr = arr.filter(d => (d.nom_donateur || '').toLowerCase().includes(q));
+      arr = arr.slice().sort((a, b) => new Date(b.date_paiement || b.date_creation) - new Date(a.date_paiement || a.date_creation));
+      return arr;
+    }, [donations, query]);
+    const shown = all.slice(0, limit);
+    const totalShown = all.reduce((s, d) => s + (Number(d.montant) || 0), 0);
+    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-between gap-3 mb-3"
+    }, /*#__PURE__*/React.createElement("h2", {
+      className: "font-serif text-xl text-ink"
+    }, "Dons re\xE7us"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => exportDons(donations),
+      className: "inline-flex items-center gap-1.5 text-sm text-bordeaux font-medium tappable px-2.5 py-1.5 rounded-lg"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "download",
+      size: 16
+    }), " ", /*#__PURE__*/React.createElement("span", {
+      className: "hidden sm:inline"
+    }, "Exporter"), " CSV")), /*#__PURE__*/React.createElement("div", {
+      className: "relative mb-4"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "search",
+      size: 18,
+      className: "absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-soft"
+    }), /*#__PURE__*/React.createElement("input", {
+      className: inputClass + ' pl-11',
+      placeholder: "Rechercher un donateur\u2026",
+      value: query,
+      onChange: e => setQuery(e.target.value),
+      "data-search-input": true
+    })), all.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
+      icon: "banknote",
+      title: "Aucun don re\xE7u pour l'instant",
+      text: "Les promesses honor\xE9es appara\xEEtront ici."
+    }) : /*#__PURE__*/React.createElement("div", {
+      className: "space-y-2.5"
+    }, shown.map(d => /*#__PURE__*/React.createElement(DonRow, {
+      key: d.id,
+      donation: d,
+      isMobile: isMobile,
+      isAdmin: isAdmin,
+      onAction: onAction,
+      onOpenSheet: onOpenSheet
+    })), all.length > limit && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setLimit(l => l + 50),
+      className: "w-full min-h-[48px] rounded-xl border border-gold-light text-bordeaux font-medium tappable bg-white"
+    }, "Afficher 50 de plus (", all.length - limit, " restants)")), all.length > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "total-bar"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-ink-soft text-sm"
+    }, all.length, " don", all.length > 1 ? 's' : '', query ? ' trouvé' + (all.length > 1 ? 's' : '') : ''), /*#__PURE__*/React.createElement("span", {
+      className: "font-serif text-xl text-sage"
+    }, formatEuro(totalShown))));
+  }
+
+  /* ====================== VUE UTILISATEURS ====================== */
+  function UsersView({
+    profiles,
+    loading,
+    onReload,
+    onNewUser,
+    onToggleActif,
+    onChangeRole,
+    currentUserId
+  }) {
+    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-between gap-3 mb-4"
+    }, /*#__PURE__*/React.createElement("h2", {
+      className: "font-serif text-xl text-ink"
+    }, "G\xE9rer les utilisateurs"), /*#__PURE__*/React.createElement("button", {
+      onClick: onNewUser,
+      className: "inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-bordeaux text-cream text-sm font-medium tappable"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "user-plus",
+      size: 17
+    }), " Nouveau compte")), loading ? /*#__PURE__*/React.createElement(Loader, {
+      label: "Chargement des comptes\u2026"
+    }) : /*#__PURE__*/React.createElement("div", {
+      className: "space-y-2.5"
+    }, profiles.map(p => /*#__PURE__*/React.createElement("div", {
+      key: p.id,
+      className: "card"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-start justify-between gap-3"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "min-w-0"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "font-medium text-ink truncate flex items-center gap-1.5"
+    }, p.nom, p.role === 'super_admin' && /*#__PURE__*/React.createElement(Icon, {
+      name: "shield-check",
+      size: 15,
+      className: "text-bordeaux shrink-0"
+    })), /*#__PURE__*/React.createElement("p", {
+      className: "text-xs text-ink-soft/70 mt-0.5"
+    }, "Inscrit le ", formatDate(p.created_at, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }))), /*#__PURE__*/React.createElement("span", {
+      className: cx('badge shrink-0', p.actif ? 'badge-sage' : 'badge-neutral')
+    }, p.actif ? 'Actif' : 'Désactivé')), /*#__PURE__*/React.createElement("div", {
+      className: "flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gold-light/35"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "relative"
+    }, /*#__PURE__*/React.createElement("select", {
+      value: p.role,
+      disabled: p.id === currentUserId,
+      onChange: e => onChangeRole(p, e.target.value),
+      className: "text-sm rounded-lg border border-gold-light/60 bg-white pl-3 pr-8 py-2 appearance-none text-ink disabled:opacity-50 outline-none"
+    }, /*#__PURE__*/React.createElement("option", {
+      value: "user"
+    }, "Utilisateur"), /*#__PURE__*/React.createElement("option", {
+      value: "super_admin"
+    }, "Super admin")), /*#__PURE__*/React.createElement(Icon, {
+      name: "chevron-down",
+      size: 15,
+      className: "absolute right-2 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none"
+    })), /*#__PURE__*/React.createElement("button", {
+      onClick: () => onToggleActif(p),
+      disabled: p.id === currentUserId,
+      className: cx('text-sm rounded-lg px-3 py-2 font-medium tappable border disabled:opacity-50', p.actif ? 'border-terracotta/40 text-terracotta bg-terracotta/5' : 'border-sage/50 text-sage bg-sage/8')
+    }, p.actif ? 'Désactiver' : 'Réactiver'), p.id === currentUserId && /*#__PURE__*/React.createElement("span", {
+      className: "text-xs text-ink-soft/70 italic"
+    }, "votre compte"))))));
+  }
+  function UserModal({
+    open,
+    onClose,
+    onCreated,
+    isMobile
+  }) {
+    const toast = useToast();
+    const [form, setForm] = useState({
+      nom: '',
+      password: generatePassword(),
+      role: 'user'
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    useEffect(() => {
+      if (open) {
+        setForm({
+          nom: '',
+          password: generatePassword(),
+          role: 'user'
+        });
+        setError('');
+      }
+    }, [open]);
+    const set = (k, v) => setForm(f => Object.assign({}, f, {
+      [k]: v
+    }));
+    const submit = async e => {
+      e.preventDefault();
+      setError('');
+      const nom = form.nom.trim();
+      const slug = slugifyName(nom);
+      if (!nom || !slug) {
+        setError('Merci d\'indiquer un nom valide.');
+        return;
+      }
+      if (form.password.length < 8) {
+        setError('Le mot de passe doit contenir au moins 8 caractères.');
+        return;
+      }
+      setLoading(true);
+      // Client temporaire : la création ne modifie pas la session de l'administrateur.
+      const tmp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      });
+      const {
+        error
+      } = await tmp.auth.signUp({
+        email: slug + '@synagogue-charenton.fr',
+        password: form.password,
+        options: {
+          data: {
+            nom: nom,
+            role: form.role
+          }
+        }
+      });
+      setLoading(false);
+      if (error) {
+        const msg = /already|registered|exist/i.test(error.message || '') ? 'Un compte existe déjà sous ce nom. Ajoutez une distinction (par exemple le prénom et l\'initiale du nom).' : authErrorMessage(error);
+        setError(msg);
+        return;
+      }
+      toast('Compte créé. Identifiant : « ' + nom + ' » — Mot de passe : ' + form.password, 'info');
+      onCreated();
+      onClose();
+    };
+    const footer = /*#__PURE__*/React.createElement("div", {
+      className: "flex gap-3"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: onClose,
+      className: "flex-1 min-h-[50px] rounded-xl border border-gold-light text-ink font-medium tappable bg-white"
+    }, "Annuler"), /*#__PURE__*/React.createElement("button", {
+      type: "submit",
+      form: "user-form",
+      disabled: loading,
+      className: "flex-1 min-h-[50px] rounded-xl bg-bordeaux text-cream font-medium tappable flex items-center justify-center gap-2 disabled:opacity-60"
+    }, loading ? /*#__PURE__*/React.createElement(Flame, {
+      size: 24,
+      className: "flicker"
+    }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+      name: "user-plus",
+      size: 18
+    }), " Cr\xE9er")));
+    return /*#__PURE__*/React.createElement(Modal, {
+      open: open,
+      onClose: onClose,
+      isMobile: isMobile,
+      title: "Nouveau compte",
+      footer: footer
+    }, /*#__PURE__*/React.createElement("form", {
+      id: "user-form",
+      onSubmit: submit,
+      className: "space-y-4 pb-2"
+    }, /*#__PURE__*/React.createElement(Field, {
+      label: "Nom",
+      required: true,
+      hint: "Ce nom servira d'identifiant de connexion (pr\xE9nom, ou pr\xE9nom et nom)."
+    }, /*#__PURE__*/React.createElement("input", {
+      className: inputClass,
+      value: form.nom,
+      autoFocus: !isMobile,
+      autoCapitalize: "words",
+      onChange: e => set('nom', e.target.value),
+      placeholder: "ex. : David Cohen"
+    })), form.nom.trim() && /*#__PURE__*/React.createElement("p", {
+      className: "-mt-2 text-xs text-ink-soft"
+    }, "Connexion avec le nom : ", /*#__PURE__*/React.createElement("span", {
+      className: "font-medium text-ink"
+    }, form.nom.trim())), /*#__PURE__*/React.createElement(Field, {
+      label: "Mot de passe",
+      required: true,
+      hint: "Communiquez-le \xE0 la personne concern\xE9e."
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex gap-2"
+    }, /*#__PURE__*/React.createElement("input", {
+      className: inputClass,
+      value: form.password,
+      onChange: e => set('password', e.target.value)
+    }), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => set('password', generatePassword()),
+      "aria-label": "G\xE9n\xE9rer un mot de passe",
+      className: "shrink-0 w-12 min-h-[48px] rounded-xl border border-gold-light bg-white flex items-center justify-center text-bordeaux tappable"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "refresh-cw",
+      size: 18
+    })))), /*#__PURE__*/React.createElement(Field, {
+      label: "R\xF4le"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "relative"
+    }, /*#__PURE__*/React.createElement("select", {
+      className: inputClass + ' appearance-none pr-10',
+      value: form.role,
+      onChange: e => set('role', e.target.value)
+    }, /*#__PURE__*/React.createElement("option", {
+      value: "user"
+    }, "Utilisateur \u2014 dons et promesses"), /*#__PURE__*/React.createElement("option", {
+      value: "super_admin"
+    }, "Super admin \u2014 tout + gestion des comptes")), /*#__PURE__*/React.createElement(Icon, {
+      name: "chevron-down",
+      size: 18,
+      className: "absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none"
+    }))), error && /*#__PURE__*/React.createElement("div", {
+      className: "flex items-start gap-2 text-sm text-red-alert bg-red-alert/8 rounded-xl px-3 py-2.5"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "alert-circle",
+      size: 18,
+      className: "shrink-0 mt-0.5"
+    }), /*#__PURE__*/React.createElement("span", null, error)), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-start gap-2 text-xs text-ink-soft bg-cream rounded-xl px-3 py-2.5 border border-gold-light/40"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "info",
+      size: 15,
+      className: "shrink-0 mt-0.5 text-gold-dark"
+    }), /*#__PURE__*/React.createElement("span", null, "Le compte est imm\xE9diatement actif. Transmettez le nom et le mot de passe de fa\xE7on s\xE9curis\xE9e."))));
+  }
+
+  /* ====================== ÉTAT VIDE ====================== */
+  function EmptyState({
+    icon,
+    title,
+    text
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "flex flex-col items-center text-center py-14 px-6"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "w-16 h-16 rounded-2xl bg-gold/10 flex items-center justify-center mb-4"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: icon,
+      size: 30,
+      className: "text-gold-dark"
+    })), /*#__PURE__*/React.createElement("p", {
+      className: "font-serif text-lg text-ink"
+    }, title), /*#__PURE__*/React.createElement("p", {
+      className: "text-sm text-ink-soft mt-1 max-w-xs"
+    }, text));
+  }
+
+  /* ====================== BANDEAU INSTALLATION ====================== */
+  function InstallBanner() {
+    const [visible, setVisible] = useState(false);
+    const [deferred, setDeferred] = useState(null);
+    const [iosHint, setIosHint] = useState(false);
+    useEffect(() => {
+      const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if (standalone) return;
+      if (sessionStorage.getItem('install-dismissed')) return;
+      const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+      const onPrompt = e => {
+        e.preventDefault();
+        setDeferred(e);
+        setVisible(true);
+      };
+      window.addEventListener('beforeinstallprompt', onPrompt);
+      if (isIos) {
+        setIosHint(true);
+        const t = setTimeout(() => setVisible(true), 2500);
+        return () => {
+          window.removeEventListener('beforeinstallprompt', onPrompt);
+          clearTimeout(t);
+        };
+      }
+      return () => window.removeEventListener('beforeinstallprompt', onPrompt);
+    }, []);
+    const dismiss = () => {
+      setVisible(false);
+      sessionStorage.setItem('install-dismissed', '1');
+    };
+    const install = async () => {
+      if (!deferred) return;
+      deferred.prompt();
+      try {
+        await deferred.userChoice;
+      } catch (e) {}
+      setDeferred(null);
+      dismiss();
+    };
+    if (!visible) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "install-banner safe-bottom"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-start gap-3"
+    }, /*#__PURE__*/React.createElement(Flame, {
+      size: 38,
+      className: "shrink-0"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "min-w-0 flex-1"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "font-medium text-ink text-sm"
+    }, "Installer l'application"), iosHint ? /*#__PURE__*/React.createElement("p", {
+      className: "text-xs text-ink-soft mt-0.5 leading-relaxed"
+    }, "Appuyez sur ", /*#__PURE__*/React.createElement(Icon, {
+      name: "share-ios",
+      size: 13,
+      className: "inline -mt-0.5"
+    }), " Partager, puis \xAB Sur l'\xE9cran d'accueil \xBB.") : /*#__PURE__*/React.createElement("p", {
+      className: "text-xs text-ink-soft mt-0.5"
+    }, "Acc\xE9dez au registre en un geste, comme une vraie app.")), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-1.5 shrink-0"
+    }, !iosHint && deferred && /*#__PURE__*/React.createElement("button", {
+      onClick: install,
+      className: "text-sm font-medium bg-bordeaux text-cream px-3.5 min-h-[40px] rounded-xl tappable"
+    }, "Installer"), /*#__PURE__*/React.createElement("button", {
+      onClick: dismiss,
+      "aria-label": "Fermer",
+      className: "w-9 h-9 flex items-center justify-center text-ink-soft tappable rounded-xl"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "x",
+      size: 18
+    })))));
+  }
+
+  /* ====================== EXPORTS CSV ====================== */
+  function exportPromesses(donations) {
+    const rows = donations.filter(d => d.statut === 'promesse').slice().sort((a, b) => new Date(a.date_creation) - new Date(b.date_creation)).map(d => [d.nom_donateur, d.telephone || '', d.email || '', String(d.montant).replace('.', ','), d.motif || '', formatDate(d.date_creation, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }), d.date_relance ? formatDate(d.date_relance, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }) : '', daysSince(d.date_creation), d.notes || '']);
+    exportCSV(['Nom', 'Téléphone', 'Email', 'Montant (€)', 'Motif', 'Date promesse', 'Dernière relance', 'Jours écoulés', 'Notes'], rows, 'synagogue-charenton-promesses-' + todayISO() + '.csv');
+  }
+  function exportDons(donations) {
+    const rows = donations.filter(d => d.statut === 'paye').slice().sort((a, b) => new Date(b.date_paiement || b.date_creation) - new Date(a.date_paiement || a.date_creation)).map(d => [d.nom_donateur, d.telephone || '', d.email || '', String(d.montant).replace('.', ','), d.motif || '', formatDate(d.date_paiement || d.date_creation, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }), formatDate(d.date_creation, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }), d.notes || '']);
+    exportCSV(['Nom', 'Téléphone', 'Email', 'Montant (€)', 'Motif', 'Date paiement', 'Date promesse initiale', 'Notes'], rows, 'synagogue-charenton-dons-' + todayISO() + '.csv');
+  }
+
+  /* ====================== TABLEAU DE BORD ====================== */
+  function Dashboard({
+    session,
+    profile,
+    onSignOut
+  }) {
+    const toast = useToast();
+    const isTablet = useMediaQuery('(min-width: 768px)');
+    const isDesktop = useMediaQuery('(min-width: 1024px)');
+    const isMobile = !isTablet;
+    const isAdmin = profile.role === 'super_admin';
+    const [donations, setDonations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [tab, setTab] = useState('promesses');
+    const [donationModal, setDonationModal] = useState({
+      open: false,
+      editing: null
+    });
+    const [userModal, setUserModal] = useState(false);
+    const [sheet, setSheet] = useState(null);
+    const [confettiKey, setConfettiKey] = useState(0);
+    const [profiles, setProfiles] = useState([]);
+    const [profilesLoading, setProfilesLoading] = useState(false);
+    const searchRef = useRef(null);
+    const loadDonations = useCallback(async silent => {
+      if (!silent) setLoading(true);else setRefreshing(true);
+      const {
+        data,
+        error
+      } = await sb.from('donations').select('*').order('date_creation', {
+        ascending: false
+      });
+      if (!silent) setLoading(false);else setRefreshing(false);
+      if (error) {
+        toast('Chargement impossible : ' + error.message, 'error');
+        return;
+      }
+      setDonations(data || []);
+    }, [toast]);
+    const loadProfiles = useCallback(async () => {
+      setProfilesLoading(true);
+      const {
+        data,
+        error
+      } = await sb.from('profiles').select('*').order('created_at', {
+        ascending: false
+      });
+      setProfilesLoading(false);
+      if (error) {
+        toast('Comptes inaccessibles : ' + error.message, 'error');
+        return;
+      }
+      setProfiles(data || []);
+    }, [toast]);
+    useEffect(() => {
+      loadDonations(false);
+    }, [loadDonations]);
+    useEffect(() => {
+      if (tab === 'users' && isAdmin) loadProfiles();
+    }, [tab, isAdmin, loadProfiles]);
+
+    // Raccourcis clavier (desktop)
+    useEffect(() => {
+      if (!isDesktop) return;
+      const onKey = e => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
+          e.preventDefault();
+          if (tab !== 'users') setDonationModal({
+            open: true,
+            editing: null
+          });
+        } else if (e.key === '/' && document.activeElement && !/input|textarea|select/i.test(document.activeElement.tagName)) {
+          e.preventDefault();
+          const el = document.querySelector('[data-search-input]');
+          if (el) el.focus();
+        }
+      };
+      window.addEventListener('keydown', onKey);
+      return () => window.removeEventListener('keydown', onKey);
+    }, [isDesktop, tab]);
+    const upsertLocal = (record, type) => {
+      setDonations(arr => {
+        if (type === 'insert') return [record].concat(arr);
+        return arr.map(d => d.id === record.id ? record : d);
+      });
+    };
+    const handleAction = useCallback(async (action, donation) => {
+      if (action === 'edit') {
+        setDonationModal({
+          open: true,
+          editing: donation
+        });
+        return;
+      }
+      if (action === 'sms') {
+        window.location.href = buildSmsHref(donation);
+        return;
+      }
+      if (action === 'call') {
+        window.location.href = telHref(donation.telephone);
+        return;
+      }
+      if (action === 'copy') {
+        try {
+          await navigator.clipboard.writeText(donation.telephone || '');
+          toast('Numéro copié : ' + formatPhone(donation.telephone), 'success');
+        } catch (e) {
+          toast('Copie impossible sur cet appareil.', 'error');
+        }
+        return;
+      }
+      if (action === 'pay') {
+        const {
+          data,
+          error
+        } = await sb.from('donations').update({
+          statut: 'paye',
+          date_paiement: new Date().toISOString()
+        }).eq('id', donation.id).select().single();
+        if (error) {
+          toast('Action impossible : ' + error.message, 'error');
+          return;
+        }
+        upsertLocal(data, 'update');
+        setConfettiKey(k => k + 1);
+        toast('Promesse honorée — qu\'elle soit source de bénédiction. 🕯️', 'success');
+        return;
+      }
+      if (action === 'relance') {
+        const {
+          data,
+          error
+        } = await sb.from('donations').update({
+          date_relance: new Date().toISOString()
+        }).eq('id', donation.id).select().single();
+        if (error) {
+          toast('Action impossible : ' + error.message, 'error');
+          return;
+        }
+        upsertLocal(data, 'update');
+        toast('Relance notée pour ' + donation.nom_donateur + '.', 'success');
+        return;
+      }
+      if (action === 'delete') {
+        if (!window.confirm('Supprimer définitivement la promesse de ' + donation.nom_donateur + ' ?')) return;
+        const {
+          error
+        } = await sb.from('donations').delete().eq('id', donation.id);
+        if (error) {
+          toast('Suppression impossible : ' + error.message, 'error');
+          return;
+        }
+        setDonations(arr => arr.filter(d => d.id !== donation.id));
+        toast('Entrée supprimée.', 'success');
+        return;
+      }
+    }, [toast]);
+    const sheetActions = d => d ? [{
+      key: 'pay',
+      icon: 'check-circle',
+      label: 'Marquer comme payé',
+      tone: 'text-sage',
+      run: () => handleAction('pay', d)
+    }, {
+      key: 'relance',
+      icon: 'bell',
+      label: "Relancé aujourd'hui",
+      tone: 'text-amber',
+      run: () => handleAction('relance', d)
+    }, d.telephone && {
+      key: 'sms',
+      icon: 'message-square',
+      label: 'Envoyer un SMS de remerciement',
+      run: () => handleAction('sms', d)
+    }, d.telephone && {
+      key: 'call',
+      icon: 'phone-call',
+      label: 'Appeler le donateur',
+      run: () => handleAction('call', d)
+    }, d.telephone && {
+      key: 'copy',
+      icon: 'copy',
+      label: 'Copier le téléphone',
+      run: () => handleAction('copy', d)
+    }, {
+      key: 'edit',
+      icon: 'pencil',
+      label: 'Modifier',
+      run: () => handleAction('edit', d)
+    }, isAdmin && {
+      key: 'delete',
+      icon: 'trash-2',
+      label: 'Supprimer',
+      danger: true,
+      run: () => handleAction('delete', d)
+    }] : [];
+    const sheetActionsDon = d => d ? [{
+      key: 'edit',
+      icon: 'pencil',
+      label: 'Modifier',
+      run: () => handleAction('edit', d)
+    }, isAdmin && {
+      key: 'delete',
+      icon: 'trash-2',
+      label: 'Supprimer',
+      danger: true,
+      run: () => handleAction('delete', d)
+    }] : [];
+
+    // Pull-to-refresh (mobile)
+    const ptr = useRef({
+      y: 0,
+      pulling: false
+    });
+    const [pull, setPull] = useState(0);
+    const onTouchStart = e => {
+      if (!isMobile) return;
+      if (window.scrollY <= 0) {
+        ptr.current = {
+          y: e.touches[0].clientY,
+          pulling: true
+        };
+      }
+    };
+    const onTouchMove = e => {
+      if (!isMobile || !ptr.current.pulling) return;
+      const d = e.touches[0].clientY - ptr.current.y;
+      if (d > 0 && window.scrollY <= 0) setPull(Math.min(90, d * 0.5));else ptr.current.pulling = false;
+    };
+    const onTouchEnd = () => {
+      if (pull > 55) {
+        loadDonations(true);
+      }
+      setPull(0);
+      ptr.current.pulling = false;
+    };
+    const tabs = [{
+      k: 'promesses',
+      label: 'Promesses',
+      icon: 'scroll-text'
+    }, {
+      k: 'dons',
+      label: 'Dons',
+      icon: 'banknote'
+    }];
+    if (isAdmin) tabs.push({
+      k: 'users',
+      label: 'Utilisateurs',
+      icon: 'users'
+    });
+    return /*#__PURE__*/React.createElement("div", {
+      className: "min-h-screen relative"
+    }, /*#__PURE__*/React.createElement(FlameWatermark, null), /*#__PURE__*/React.createElement(Confetti, {
+      fireKey: confettiKey
+    }), /*#__PURE__*/React.createElement("header", {
+      className: "app-header safe-top"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "header-inner"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-2.5 min-w-0"
+    }, /*#__PURE__*/React.createElement(Flame, {
+      size: isMobile ? 34 : 38
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "min-w-0"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "font-serif text-ink leading-tight truncate text-[15px] sm:text-base"
+    }, "Synagogue de Charenton"), /*#__PURE__*/React.createElement("p", {
+      className: "text-[11px] text-ink-soft leading-tight truncate"
+    }, profile.nom, isAdmin ? ' · Administrateur' : ''))), isTablet && /*#__PURE__*/React.createElement("nav", {
+      className: "flex items-center gap-1 ml-4"
+    }, tabs.map(t => /*#__PURE__*/React.createElement("button", {
+      key: t.k,
+      onClick: () => setTab(t.k),
+      className: cx('top-tab', tab === t.k && 'top-tab-active')
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: t.icon,
+      size: 17
+    }), " ", t.label))), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-2 ml-auto"
+    }, isTablet && tab !== 'users' && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setDonationModal({
+        open: true,
+        editing: null
+      }),
+      className: "inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-bordeaux text-cream text-sm font-medium tappable"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "plus",
+      size: 18
+    }), " Nouvelle promesse"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => loadDonations(true),
+      "aria-label": "Rafra\xEEchir",
+      className: cx('w-10 h-10 rounded-xl flex items-center justify-center text-ink-soft tappable', refreshing && 'spin')
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "refresh-cw",
+      size: 19
+    })), /*#__PURE__*/React.createElement("button", {
+      onClick: onSignOut,
+      "aria-label": "Se d\xE9connecter",
+      className: "w-10 h-10 rounded-xl flex items-center justify-center text-ink-soft tappable"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "log-out",
+      size: 19
+    }))))), isMobile && pull > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "ptr-indicator",
+      style: {
+        height: pull + 'px'
+      }
+    }, /*#__PURE__*/React.createElement(Flame, {
+      size: 30,
+      className: pull > 55 ? 'flicker' : ''
+    })), /*#__PURE__*/React.createElement("main", {
+      className: "app-main",
+      onTouchStart: onTouchStart,
+      onTouchMove: onTouchMove,
+      onTouchEnd: onTouchEnd
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "content-wrap"
+    }, (tab === 'promesses' || tab === 'dons') && /*#__PURE__*/React.createElement("div", {
+      className: "mb-5"
+    }, /*#__PURE__*/React.createElement(KpiCards, {
+      donations: donations
+    })), loading ? /*#__PURE__*/React.createElement(Loader, {
+      label: "Ouverture du registre\u2026"
+    }) : /*#__PURE__*/React.createElement(React.Fragment, null, tab === 'promesses' && /*#__PURE__*/React.createElement(PromessesView, {
+      donations: donations,
+      isMobile: isMobile,
+      isAdmin: isAdmin,
+      onAction: handleAction,
+      onOpenSheet: d => setSheet({
+        donation: d,
+        kind: 'promesse'
+      }),
+      searchRef: searchRef
+    }), tab === 'dons' && /*#__PURE__*/React.createElement(DonsView, {
+      donations: donations,
+      isMobile: isMobile,
+      isAdmin: isAdmin,
+      onAction: handleAction,
+      onOpenSheet: d => setSheet({
+        donation: d,
+        kind: 'don'
+      })
+    }), tab === 'users' && isAdmin && /*#__PURE__*/React.createElement(UsersView, {
+      profiles: profiles,
+      loading: profilesLoading,
+      onReload: loadProfiles,
+      currentUserId: session.user.id,
+      onNewUser: () => setUserModal(true),
+      onToggleActif: async p => {
+        const {
+          error
+        } = await sb.from('profiles').update({
+          actif: !p.actif
+        }).eq('id', p.id);
+        if (error) {
+          toast('Action impossible : ' + error.message, 'error');
+          return;
+        }
+        toast(p.actif ? 'Compte désactivé.' : 'Compte réactivé.', 'success');
+        loadProfiles();
+      },
+      onChangeRole: async (p, role) => {
+        if (role === p.role) return;
+        const {
+          error
+        } = await sb.from('profiles').update({
+          role: role
+        }).eq('id', p.id);
+        if (error) {
+          toast('Action impossible : ' + error.message, 'error');
+          return;
+        }
+        toast('Rôle mis à jour pour ' + p.nom + '.', 'success');
+        loadProfiles();
+      }
+    }))), /*#__PURE__*/React.createElement("p", {
+      className: "watermark-text"
+    }, "\u05D0\u05E9 \u05E9\u05DC\u05D9")), isMobile && tab !== 'users' && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setDonationModal({
+        open: true,
+        editing: null
+      }),
+      className: "fab safe-bottom-fab",
+      "aria-label": "Nouvelle promesse de don"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "plus",
+      size: 30,
+      strokeWidth: 2
+    })), isMobile && /*#__PURE__*/React.createElement("nav", {
+      className: "bottom-bar safe-bottom"
+    }, tabs.map(t => /*#__PURE__*/React.createElement("button", {
+      key: t.k,
+      onClick: () => setTab(t.k),
+      className: cx('bottom-tab', tab === t.k && 'bottom-tab-active')
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: t.icon,
+      size: 22
+    }), /*#__PURE__*/React.createElement("span", null, t.label)))), /*#__PURE__*/React.createElement(DonationModal, {
+      open: donationModal.open,
+      editing: donationModal.editing,
+      isMobile: isMobile,
+      userId: session.user.id,
+      onClose: () => setDonationModal({
+        open: false,
+        editing: null
+      }),
+      onSaved: (record, type, justPaid) => {
+        upsertLocal(record, type);
+        if (justPaid) setConfettiKey(k => k + 1);
+      }
+    }), isAdmin && /*#__PURE__*/React.createElement(UserModal, {
+      open: userModal,
+      isMobile: isMobile,
+      onClose: () => setUserModal(false),
+      onCreated: loadProfiles
+    }), /*#__PURE__*/React.createElement(ActionSheet, {
+      donation: sheet ? sheet.donation : null,
+      onClose: () => setSheet(null),
+      actions: sheet ? sheet.kind === 'don' ? sheetActionsDon(sheet.donation) : sheetActions(sheet.donation) : []
+    }), /*#__PURE__*/React.createElement(InstallBanner, null));
+  }
+
+  /* ====================== APPLICATION ====================== */
+  function App() {
+    const online = useOnline();
+    const [session, setSession] = useState(null);
+    const [profile, setProfile] = useState(null);
+    const [authLoading, setAuthLoading] = useState(true);
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [recovery, setRecovery] = useState(false);
+    useEffect(() => {
+      let active = true;
+      sb.auth.getSession().then(({
+        data
+      }) => {
+        if (!active) return;
+        setSession(data.session || null);
+        setAuthLoading(false);
+      });
+      const {
+        data: sub
+      } = sb.auth.onAuthStateChange((event, sess) => {
+        if (!active) return;
+        if (event === 'PASSWORD_RECOVERY') setRecovery(true);
+        setSession(sess || null);
+        setAuthLoading(false);
+        if (!sess) setProfile(null);
+      });
+      return () => {
+        active = false;
+        sub.subscription.unsubscribe();
+      };
+    }, []);
+    useEffect(() => {
+      if (!session) {
+        setProfile(null);
+        return;
+      }
+      let active = true;
+      setProfileLoading(true);
+      sb.from('profiles').select('*').eq('id', session.user.id).single().then(({
+        data,
+        error
+      }) => {
+        if (!active) return;
+        setProfileLoading(false);
+        if (error) {
+          setProfile(null);
+          return;
+        }
+        setProfile(data);
+      });
+      return () => {
+        active = false;
+      };
+    }, [session]);
+    const signOut = useCallback(async () => {
+      await sb.auth.signOut();
+      setProfile(null);
+      setSession(null);
+      setRecovery(false);
+    }, []);
+    if (!online) return /*#__PURE__*/React.createElement(OfflineScreen, null);
+    if (authLoading) return /*#__PURE__*/React.createElement("div", {
+      className: "bg-cream"
+    }, /*#__PURE__*/React.createElement(Loader, {
+      label: "Initialisation\u2026",
+      full: true
+    }));
+    if (recovery && session) return /*#__PURE__*/React.createElement(RecoveryScreen, {
+      onDone: () => setRecovery(false)
+    });
+    if (!session) return /*#__PURE__*/React.createElement(LoginScreen, null);
+    if (profileLoading || !profile && session) {
+      return /*#__PURE__*/React.createElement("div", {
+        className: "bg-cream"
+      }, /*#__PURE__*/React.createElement(Loader, {
+        label: "Chargement de votre profil\u2026",
+        full: true
+      }));
+    }
+    if (profile && !profile.actif) return /*#__PURE__*/React.createElement(DisabledScreen, {
+      onSignOut: signOut
+    });
+    return /*#__PURE__*/React.createElement(Dashboard, {
+      session: session,
+      profile: profile,
+      onSignOut: signOut
+    });
+  }
+
+  /* ====================== MONTAGE ====================== */
+  const rootEl = document.getElementById('root');
+  ReactDOM.createRoot(rootEl).render(/*#__PURE__*/React.createElement(ToastProvider, null, /*#__PURE__*/React.createElement(App, null)));
+})();  </script>
+
+  <!-- Service Worker (PWA) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js').then(function (reg) {
+          reg.update();
+          setInterval(function () { reg.update(); }, 60 * 60 * 1000);
+        }).catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>
