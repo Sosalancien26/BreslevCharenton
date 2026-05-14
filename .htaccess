@@ -1,0 +1,36 @@
+# ============================================================
+#  CRM Synagogue Charenton — en-têtes de sécurité (Apache / LiteSpeed)
+# ============================================================
+
+# Force HTTPS
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Forcer HTTPS pendant 1 an (HSTS)
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  # Empêcher l'affichage du site dans une iframe (anti-clickjacking)
+  Header always set X-Frame-Options "DENY"
+  # Empêcher la devinette de type de fichier
+  Header always set X-Content-Type-Options "nosniff"
+  # Ne pas fuiter l'URL complète vers les sites tiers
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  # Désactiver les capteurs non utilisés
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+  # Le service worker doit pouvoir contrôler tout le site
+  <FilesMatch "sw\.js$">
+    Header set Service-Worker-Allowed "/"
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+# Pages d'erreur -> l'application (SPA)
+ErrorDocument 404 /index.html
+
+# Empêcher l'accès aux fichiers sensibles
+<FilesMatch "(^\.|\.sql$|\.md$)">
+  Require all denied
+</FilesMatch>

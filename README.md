@@ -53,11 +53,26 @@ serveur de création de comptes sont en place.
 
 Ce compte peut tout faire, y compris créer et gérer les autres comptes.
 
-## Mot de passe oublié
+## Mots de passe
 
-Pas de réinitialisation par email (il n'y a pas d'email). Un super
-administrateur réinitialise le mot de passe d'un membre depuis le tableau
-de bord Supabase : **Authentication → Users**.
+Les mots de passe sont **hachés** dans la base : personne, pas même un
+super administrateur, ne peut les afficher en clair — c'est ce qui les
+protège. Pour redonner l'accès à un membre, un super admin utilise le
+bouton **« Mot de passe »** dans la gestion des utilisateurs : un nouveau
+mot de passe est généré, copié dans le presse-papier, et n'a plus qu'à
+être transmis à la personne.
+
+## Sécurité
+
+- Accès aux données protégé par Row Level Security (RLS) sur toutes les tables
+- Fonctions internes isolées dans un schéma privé, non exposé par l'API
+- Création de comptes et réinitialisation de mot de passe via fonctions
+  serveur sécurisées (clé service role jamais exposée côté navigateur)
+- Journal d'audit de toutes les actions sensibles
+- En-têtes de sécurité HTTP (`.htaccess`) : HTTPS forcé, anti-clickjacking, etc.
+- **Un réglage manuel recommandé** : dans le tableau de bord Supabase,
+  *Authentication → Policies*, activer **« Leaked password protection »**
+  (refuse les mots de passe connus comme compromis).
 
 ## Rôles
 

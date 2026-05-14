@@ -355,7 +355,8 @@
     'file-check': '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/>',
     upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
     'external-link': '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
-    history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>'
+    history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+    key: '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>'
   };
   function Icon({
     name,
@@ -678,9 +679,7 @@
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "refresh-cw",
       size: 18
-    }), " R\xE9essayer")), /*#__PURE__*/React.createElement("p", {
-      className: "watermark-text"
-    }, "\u05D0\u05E9 \u05E9\u05DC\u05D9"));
+    }), " R\xE9essayer")));
   }
 
   /* ====================== ÉCRAN COMPTE DÉSACTIVÉ ====================== */
@@ -707,9 +706,7 @@
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "log-out",
       size: 18
-    }), " Se d\xE9connecter")), /*#__PURE__*/React.createElement("p", {
-      className: "watermark-text"
-    }, "\u05D0\u05E9 \u05E9\u05DC\u05D9"));
+    }), " Se d\xE9connecter")));
   }
 
   /* ====================== CONNEXION ====================== */
@@ -827,9 +824,7 @@
       className: "shrink-0 mt-0.5 text-gold-dark"
     }), /*#__PURE__*/React.createElement("span", null, "Merci de contacter un administrateur de la synagogue : il pourra r\xE9initialiser votre mot de passe."))), /*#__PURE__*/React.createElement("p", {
       className: "text-center text-xs text-ink-soft/70 mt-6 font-serif italic"
-    }, "L'acc\xE8s est r\xE9serv\xE9 aux membres habilit\xE9s."))), /*#__PURE__*/React.createElement("p", {
-      className: "watermark-text"
-    }, "\u05D0\u05E9 \u05E9\u05DC\u05D9"));
+    }, "L'acc\xE8s est r\xE9serv\xE9 aux membres habilit\xE9s."))));
   }
 
   /* ====================== NOUVEAU MOT DE PASSE (récupération) ====================== */
@@ -1860,6 +1855,7 @@
     onNewUser,
     onToggleActif,
     onChangeRole,
+    onResetPassword,
     currentUserId
   }) {
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
@@ -1918,7 +1914,13 @@
       onClick: () => onToggleActif(p),
       disabled: p.id === currentUserId,
       className: cx('text-sm rounded-lg px-3 py-2 font-medium tappable border disabled:opacity-50', p.actif ? 'border-terracotta/40 text-terracotta bg-terracotta/5' : 'border-sage/50 text-sage bg-sage/8')
-    }, p.actif ? 'Désactiver' : 'Réactiver'), p.id === currentUserId && /*#__PURE__*/React.createElement("span", {
+    }, p.actif ? 'Désactiver' : 'Réactiver'), /*#__PURE__*/React.createElement("button", {
+      onClick: () => onResetPassword(p),
+      className: "text-sm rounded-lg px-3 py-2 font-medium tappable border border-gold-light text-bordeaux bg-white inline-flex items-center gap-1.5"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "key",
+      size: 15
+    }), " Mot de passe"), p.id === currentUserId && /*#__PURE__*/React.createElement("span", {
       className: "text-xs text-ink-soft/70 italic"
     }, "votre compte"))))));
   }
@@ -2154,6 +2156,12 @@
       tone: 'text-terracotta',
       bg: 'bg-terracotta/10',
       label: 'Compte (dés)activé'
+    },
+    compte_mdp: {
+      icon: 'key',
+      tone: 'text-bordeaux',
+      bg: 'bg-bordeaux/8',
+      label: 'Mot de passe réinitialisé'
     }
   };
   function JournalView({
@@ -2731,6 +2739,42 @@
       onReload: loadProfiles,
       currentUserId: session.user.id,
       onNewUser: () => setUserModal(true),
+      onResetPassword: async p => {
+        if (!window.confirm('Réinitialiser le mot de passe de ' + p.nom + ' ?\n\nL\'ancien mot de passe ne fonctionnera plus.')) return;
+        const newPwd = generatePassword();
+        const {
+          data,
+          error
+        } = await sb.functions.invoke('reset-password', {
+          body: {
+            userId: p.id,
+            password: newPwd
+          }
+        });
+        if (error) {
+          let msg = 'Réinitialisation impossible. Merci de réessayer.';
+          try {
+            if (error.context && typeof error.context.json === 'function') {
+              const ctx = await error.context.json();
+              if (ctx && ctx.error) msg = ctx.error;
+            } else if (error.message) {
+              msg = error.message;
+            }
+          } catch (_) {}
+          toast(msg, 'error');
+          return;
+        }
+        if (data && data.error) {
+          toast(data.error, 'error');
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(newPwd);
+          toast('Nouveau mot de passe de « ' + p.nom + ' » copié — collez-le pour le lui transmettre.', 'info');
+        } catch (e) {
+          toast('Nouveau mot de passe de « ' + p.nom + ' » : ' + newPwd, 'info');
+        }
+      },
       onToggleActif: async p => {
         const {
           error
@@ -2762,9 +2806,7 @@
       entries: auditLog,
       loading: auditLoading,
       onReload: loadAuditLog
-    }))), /*#__PURE__*/React.createElement("p", {
-      className: "watermark-text"
-    }, "\u05D0\u05E9 \u05E9\u05DC\u05D9")), isMobile && tab !== 'users' && tab !== 'journal' && /*#__PURE__*/React.createElement("button", {
+    })))), isMobile && tab !== 'users' && tab !== 'journal' && /*#__PURE__*/React.createElement("button", {
       onClick: () => setDonationModal({
         open: true,
         editing: null

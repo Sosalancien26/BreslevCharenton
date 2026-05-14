@@ -310,3 +310,58 @@ create policy "cerfa - suppression super admin" on storage.objects for delete
 --  immédiatement confirmé, aucun email envoyé. Le code source
 --  se trouve dans le tableau de bord Supabase > Edge Functions.
 -- ============================================================
+
+
+-- ============================================================
+--  v3 — DURCISSEMENT SÉCURITÉ
+--  (appliqué au projet ; vérifié par le linter Supabase)
+-- ============================================================
+
+-- Schéma privé : les fonctions internes ne sont plus exposées par l'API REST
+create schema if not exists private;
+grant usage on schema private to authenticated, anon, service_role;
+
+create or replace function private.is_super_admin()
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (select 1 from public.profiles where id = auth.uid() and role = 'super_admin');
+$$;
+create or replace function private.is_active_user()
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (select 1 from public.profiles where id = auth.uid() and actif = true);
+$$;
+create or replace function private.current_actor_nom()
+returns text language sql security definer stable set search_path = public as $$
+  select nom from public.profiles where id = auth.uid();
+$$;
+grant execute on function private.is_super_admin(), private.is_active_user(), private.current_actor_nom()
+  to authenticated, anon, service_role;
+
+-- Anciennes fonctions publiques supprimées ; toutes les politiques RLS
+-- (profiles, donations, relances, audit_log, storage.objects) et les
+-- triggers d'audit ont été recréés pour utiliser private.*.
+-- Les politiques de "profiles" ont été regroupées en une politique propre
+-- par action, et "Voir son propre profil" utilise (select auth.uid()).
+
+-- search_path verrouillé sur handle_updated_at :
+--   create or replace function public.handle_updated_at() ... set search_path = public ...
+
+-- Fonctions de trigger retirées de la surface d'API (jamais appelées en direct) :
+--   revoke all on function public.handle_new_user(), public.handle_updated_at(),
+--     public.audit_donations(), public.audit_profiles(), public.sync_relance_stats()
+--     from public, anon, authenticated;
+
+-- Index sur clés étrangères :
+create index if not exists idx_donations_created_by on public.donations(created_by);
+create index if not exists idx_relances_created_by on public.relances(created_by);
+
+-- ============================================================
+--  FONCTIONS EDGE
+--   - create-user     : création de compte (super admin), sans email
+--   - reset-password  : réinitialisation du mot de passe d'un membre
+--                       par un super admin (les mots de passe sont
+--                       hachés et ne peuvent jamais être affichés en clair)
+--
+--  RESTE À FAIRE MANUELLEMENT (1 réglage dans le tableau de bord Supabase) :
+--   Authentication > Policies > activer "Leaked password protection"
+--   (vérifie les mots de passe contre les fuites connues — HaveIBeenPwned)
+-- ============================================================
