@@ -1607,6 +1607,73 @@
   }
 
   /* ====================== KPI ====================== */
+  /* ====================== RÉPARTITION PAR MOTIF ====================== */
+  function MotifBreakdown({
+    donations
+  }) {
+    const [open, setOpen] = useState(false);
+    const rows = useMemo(() => {
+      const map = {};
+      donations.forEach(d => {
+        const m = d.motif || 'Sans motif';
+        if (!map[m]) map[m] = {
+          motif: m,
+          count: 0,
+          promesses: 0,
+          dons: 0
+        };
+        const mt = Number(d.montant) || 0;
+        map[m].count += 1;
+        if (d.statut === 'paye') map[m].dons += mt;else map[m].promesses += mt;
+      });
+      return Object.keys(map).map(k => {
+        const r = map[k];
+        return {
+          motif: r.motif,
+          count: r.count,
+          promesses: r.promesses,
+          dons: r.dons,
+          total: r.promesses + r.dons
+        };
+      }).sort((a, b) => b.total - a.total);
+    }, [donations]);
+    if (rows.length === 0) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "mt-3"
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => setOpen(v => !v),
+      className: "w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-surface border border-gold-light/45 card-shadow tappable"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "flex items-center gap-2 text-sm font-medium text-ink"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "scroll-text",
+      size: 17,
+      className: "text-gold-dark"
+    }), "R\xE9partition par motif"), /*#__PURE__*/React.createElement(Icon, {
+      name: open ? 'chevron-down' : 'chevron-right',
+      size: 18,
+      className: "text-ink-soft"
+    })), open && /*#__PURE__*/React.createElement("div", {
+      className: "mt-2 rounded-xl bg-surface border border-gold-light/45 overflow-hidden card-shadow"
+    }, rows.map((r, i) => /*#__PURE__*/React.createElement("div", {
+      key: r.motif,
+      className: cx('flex items-center justify-between gap-3 px-4 py-3', i > 0 && 'border-t border-gold-light/30')
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "min-w-0"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "text-sm font-medium text-ink truncate"
+    }, r.motif), /*#__PURE__*/React.createElement("p", {
+      className: "text-xs text-ink-soft"
+    }, r.count, " ", r.count > 1 ? 'entrées' : 'entrée', r.promesses > 0 ? /*#__PURE__*/React.createElement("span", {
+      className: "text-amber"
+    }, " \xB7 ", formatEuro(r.promesses), " en attente") : null)), /*#__PURE__*/React.createElement("div", {
+      className: "text-right shrink-0"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "font-serif text-lg text-ink leading-tight"
+    }, formatEuro(r.total)), r.dons > 0 ? /*#__PURE__*/React.createElement("p", {
+      className: "text-xs text-sage"
+    }, formatEuro(r.dons), " re\xE7us") : null)))));
+  }
   function KpiCards({
     donations
   }) {
@@ -1856,6 +1923,7 @@
     onToggleActif,
     onChangeRole,
     onResetPassword,
+    onViewPassword,
     currentUserId
   }) {
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
@@ -1915,12 +1983,18 @@
       disabled: p.id === currentUserId,
       className: cx('text-sm rounded-lg px-3 py-2 font-medium tappable border disabled:opacity-50', p.actif ? 'border-terracotta/40 text-terracotta bg-terracotta/5' : 'border-sage/50 text-sage bg-sage/8')
     }, p.actif ? 'Désactiver' : 'Réactiver'), /*#__PURE__*/React.createElement("button", {
-      onClick: () => onResetPassword(p),
+      onClick: () => onViewPassword(p),
       className: "text-sm rounded-lg px-3 py-2 font-medium tappable border border-gold-light text-bordeaux bg-white inline-flex items-center gap-1.5"
     }, /*#__PURE__*/React.createElement(Icon, {
-      name: "key",
+      name: "eye",
       size: 15
-    }), " Mot de passe"), p.id === currentUserId && /*#__PURE__*/React.createElement("span", {
+    }), " Voir le mdp"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => onResetPassword(p),
+      className: "text-sm rounded-lg px-3 py-2 font-medium tappable border border-gold-light text-ink-soft bg-white inline-flex items-center gap-1.5"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "refresh-cw",
+      size: 15
+    }), " R\xE9initialiser"), p.id === currentUserId && /*#__PURE__*/React.createElement("span", {
       className: "text-xs text-ink-soft/70 italic"
     }, "votre compte"))))));
   }
@@ -2162,6 +2236,12 @@
       tone: 'text-bordeaux',
       bg: 'bg-bordeaux/8',
       label: 'Mot de passe réinitialisé'
+    },
+    compte_mdp_vu: {
+      icon: 'eye',
+      tone: 'text-ink-soft',
+      bg: 'bg-cream',
+      label: 'Mot de passe consulté'
     }
   };
   function JournalView({
@@ -2712,6 +2792,8 @@
       className: "mb-5"
     }, /*#__PURE__*/React.createElement(KpiCards, {
       donations: donations
+    }), /*#__PURE__*/React.createElement(MotifBreakdown, {
+      donations: donations
     })), loading ? /*#__PURE__*/React.createElement(Loader, {
       label: "Ouverture du registre\u2026"
     }) : /*#__PURE__*/React.createElement(React.Fragment, null, tab === 'promesses' && /*#__PURE__*/React.createElement(PromessesView, {
@@ -2788,6 +2870,43 @@
         toast(p.actif ? 'Compte désactivé.' : 'Compte réactivé.', 'success');
         loadProfiles();
       },
+      onViewPassword: async p => {
+        const {
+          data,
+          error
+        } = await sb.functions.invoke('get-password', {
+          body: {
+            userId: p.id
+          }
+        });
+        if (error) {
+          let msg = 'Consultation impossible. Merci de réessayer.';
+          try {
+            if (error.context && typeof error.context.json === 'function') {
+              const ctx = await error.context.json();
+              if (ctx && ctx.error) msg = ctx.error;
+            } else if (error.message) {
+              msg = error.message;
+            }
+          } catch (_) {}
+          toast(msg, 'error');
+          return;
+        }
+        if (data && data.ok === false) {
+          toast(data.message || 'Mot de passe indisponible.', 'info');
+          return;
+        }
+        if (data && data.password) {
+          try {
+            await navigator.clipboard.writeText(data.password);
+            toast('Mot de passe de « ' + p.nom + ' » : ' + data.password + '  — copié dans le presse-papier.', 'info');
+          } catch (e) {
+            toast('Mot de passe de « ' + p.nom + ' » : ' + data.password, 'info');
+          }
+          return;
+        }
+        toast('Mot de passe indisponible.', 'error');
+      },
       onChangeRole: async (p, role) => {
         if (role === p.role) return;
         const {
@@ -2854,6 +2973,7 @@
   /* ====================== APPLICATION ====================== */
   function App() {
     const online = useOnline();
+    const toast = useToast();
     const [session, setSession] = useState(null);
     const [profile, setProfile] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
@@ -2911,6 +3031,32 @@
       setSession(null);
       setRecovery(false);
     }, []);
+
+    // Déconnexion automatique après 30 minutes d'inactivité
+    useEffect(() => {
+      if (!session) return;
+      const TIMEOUT = 30 * 60 * 1000;
+      let last = Date.now();
+      const bump = () => {
+        last = Date.now();
+      };
+      const events = ['click', 'keydown', 'touchstart', 'scroll', 'mousemove'];
+      events.forEach(e => window.addEventListener(e, bump, {
+        passive: true
+      }));
+      const iv = setInterval(() => {
+        if (Date.now() - last > TIMEOUT) {
+          events.forEach(e => window.removeEventListener(e, bump));
+          clearInterval(iv);
+          toast('Déconnexion automatique après 30 minutes d\'inactivité.', 'info');
+          signOut();
+        }
+      }, 20000);
+      return () => {
+        clearInterval(iv);
+        events.forEach(e => window.removeEventListener(e, bump));
+      };
+    }, [session, signOut, toast]);
     if (!online) return /*#__PURE__*/React.createElement(OfflineScreen, null);
     if (authLoading) return /*#__PURE__*/React.createElement("div", {
       className: "bg-cream"

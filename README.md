@@ -55,12 +55,23 @@ Ce compte peut tout faire, y compris créer et gérer les autres comptes.
 
 ## Mots de passe
 
-Les mots de passe sont **hachés** dans la base : personne, pas même un
-super administrateur, ne peut les afficher en clair — c'est ce qui les
-protège. Pour redonner l'accès à un membre, un super admin utilise le
-bouton **« Mot de passe »** dans la gestion des utilisateurs : un nouveau
-mot de passe est généré, copié dans le presse-papier, et n'a plus qu'à
-être transmis à la personne.
+Pour la **connexion**, les mots de passe restent hachés (Supabase ne les
+stocke jamais en clair de ce côté). En complément, à la demande de la
+synagogue, une copie **chiffrée (AES-256)** est conservée dans un coffre
+isolé pour que les **super admins** puissent les consulter.
+
+Dans *Gérer les utilisateurs*, chaque membre a deux boutons :
+
+- **Voir le mdp** — affiche et copie le mot de passe enregistré (pour le
+  retransmettre). Chaque consultation est tracée dans le journal d'audit.
+- **Réinitialiser** — génère un nouveau mot de passe, le copie, et
+  remplace l'ancien.
+
+> Le coffre n'est accessible que par les fonctions serveur sécurisées,
+> jamais via l'API publique. Note : seuls les mots de passe **créés via
+> l'application** sont consultables (le tout premier mot de passe admin,
+> défini directement en base, ne l'est pas — réinitialise-le une fois
+> pour qu'il entre dans le coffre).
 
 ## Sécurité
 

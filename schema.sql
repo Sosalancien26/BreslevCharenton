@@ -365,3 +365,36 @@ create index if not exists idx_relances_created_by on public.relances(created_by
 --   Authentication > Policies > activer "Leaked password protection"
 --   (vérifie les mots de passe contre les fuites connues — HaveIBeenPwned)
 -- ============================================================
+
+
+-- ============================================================
+--  v4 — COFFRE DES MOTS DE PASSE (consultation par super admin)
+--
+--  À la demande explicite de l'administrateur : les super admins
+--  peuvent consulter les mots de passe des comptes créés via l'app.
+--
+--  Les mots de passe restent HACHÉS côté authentification Supabase.
+--  En plus, une copie CHIFFRÉE (AES-256-GCM) est conservée dans la
+--  table ci-dessous, accessible UNIQUEMENT via les fonctions Edge
+--  (clé service role). La clé de déchiffrement vit dans le code des
+--  fonctions Edge — un export brut de la base ne révèle donc rien.
+--  Compromis de sécurité accepté en connaissance de cause.
+-- ============================================================
+create table public.user_secrets (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  secret text not null,                 -- mot de passe chiffré AES-256-GCM (base64)
+  updated_at timestamptz not null default now(),
+  updated_by uuid references public.profiles(id)
+);
+alter table public.user_secrets enable row level security;
+-- RLS active + AUCUNE politique + privilèges révoqués : table inaccessible
+-- via l'API publique. Seules les fonctions Edge (service role) y accèdent.
+revoke all on public.user_secrets from anon, authenticated;
+
+-- ============================================================
+--  FONCTIONS EDGE (récapitulatif)
+--   - create-user     : crée un compte + stocke le mot de passe chiffré
+--   - reset-password  : réinitialise un mot de passe + met à jour le coffre
+--   - get-password    : déchiffre et renvoie un mot de passe (super admin),
+--                       chaque consultation est journalisée (compte_mdp_vu)
+-- ============================================================
