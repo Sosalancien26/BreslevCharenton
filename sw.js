@@ -6,7 +6,8 @@ const CORE = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
-  './apple-touch-icon.png'
+  './apple-touch-icon.png',
+  './flame.png'
 ];
 
 // Installation : pré-cache de la coquille de l'application

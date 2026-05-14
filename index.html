@@ -90,6 +90,7 @@
     @keyframes spin{to{transform:rotate(360deg);}}
     .spin svg{animation:spin .8s linear infinite;}
 
+    .flame-img{object-fit:contain;display:block;-webkit-user-drag:none;user-select:none;}
     .watermark-text{text-align:center;font-family:'Fraunces',serif;font-style:italic;
       color:#1a2238;opacity:.18;font-size:22px;padding:26px 0 14px;letter-spacing:.04em;}
 
@@ -513,107 +514,37 @@
   }
 
   /* ====================== FLAMME (SVG ORIGINAL) ====================== */
-  /* Flamme multi-langues "Aesh Sheli" — pétales superposés */
-  const FLAME_PETAL = 'M0 -1 C 0.18 -0.66, 0.5 -0.4, 0.5 -0.15 C 0.5 0.03, 0.33 0.13, 0 0.14 C -0.33 0.13, -0.5 0.03, -0.5 -0.15 C -0.5 -0.4, -0.18 -0.66, 0 -1 Z';
-  const FLAME_BACK = [[140, 326, 0, 150, 180], [98, 318, -24, 80, 158], [118, 322, -11, 96, 240], [140, 324, -1, 104, 320], [164, 322, 12, 94, 250], [184, 318, 25, 78, 170]];
-  const FLAME_INNER = [[124, 324, -9, 60, 170], [142, 326, 2, 70, 248], [160, 324, 11, 58, 188]];
-  const FLAME_CORE = [143, 325, 2, 38, 150];
-  function tongueTransform(t) {
-    return 'translate(' + t[0] + ' ' + t[1] + ') rotate(' + t[2] + ') scale(' + t[3] + ' ' + t[4] + ')';
-  }
+  /* Flamme "Aesh Sheli" — image officielle de la synagogue (flame.png) */
   function Flame({
     size = 96,
     className = '',
     animated = false
   }) {
-    const [uid] = useState(() => 'fl' + Math.random().toString(36).slice(2, 8));
-    const gw = uid + 'w',
-      gi = uid + 'i';
-    return /*#__PURE__*/React.createElement("svg", {
+    return /*#__PURE__*/React.createElement("img", {
+      src: "./flame.png",
+      alt: "",
+      "aria-hidden": "true",
+      draggable: "false",
       width: size,
       height: size,
-      viewBox: "0 0 280 380",
-      className: cx(className, animated && 'flame-anim'),
-      "aria-hidden": "true"
-    }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
-      id: gw,
-      x1: "0.5",
-      y1: "1",
-      x2: "0.5",
-      y2: "0"
-    }, /*#__PURE__*/React.createElement("stop", {
-      offset: "0",
-      stopColor: "#b8320a"
-    }), /*#__PURE__*/React.createElement("stop", {
-      offset: "0.42",
-      stopColor: "#d97706"
-    }), /*#__PURE__*/React.createElement("stop", {
-      offset: "0.78",
-      stopColor: "#e8a93a"
-    }), /*#__PURE__*/React.createElement("stop", {
-      offset: "1",
-      stopColor: "#f6db88"
-    })), /*#__PURE__*/React.createElement("linearGradient", {
-      id: gi,
-      x1: "0.5",
-      y1: "1",
-      x2: "0.5",
-      y2: "0"
-    }, /*#__PURE__*/React.createElement("stop", {
-      offset: "0",
-      stopColor: "#d97706"
-    }), /*#__PURE__*/React.createElement("stop", {
-      offset: "0.62",
-      stopColor: "#efb74a"
-    }), /*#__PURE__*/React.createElement("stop", {
-      offset: "1",
-      stopColor: "#fbf1cf"
-    }))), FLAME_BACK.map((t, idx) => /*#__PURE__*/React.createElement("path", {
-      key: 'b' + idx,
-      d: FLAME_PETAL,
-      fill: 'url(#' + gw + ')',
-      transform: tongueTransform(t)
-    })), FLAME_INNER.map((t, idx) => /*#__PURE__*/React.createElement("path", {
-      key: 'n' + idx,
-      d: FLAME_PETAL,
-      fill: 'url(#' + gi + ')',
-      transform: tongueTransform(t)
-    })), /*#__PURE__*/React.createElement("path", {
-      d: FLAME_PETAL,
-      fill: "#fbf1cf",
-      fillOpacity: "0.9",
-      transform: tongueTransform(FLAME_CORE)
-    }));
+      className: cx('flame-img', className, animated && 'flame-anim')
+    });
   }
   function FlameWatermark() {
-    const [uid] = useState(() => 'fw' + Math.random().toString(36).slice(2, 8));
-    const g = uid + 'g';
     return /*#__PURE__*/React.createElement("div", {
       className: "flame-watermark",
       "aria-hidden": "true"
-    }, /*#__PURE__*/React.createElement("svg", {
-      viewBox: "0 0 280 380",
-      className: "breathe",
-      width: "100%",
-      height: "100%"
-    }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
-      id: g,
-      x1: "0.3",
-      y1: "1",
-      x2: "0.7",
-      y2: "0"
-    }, /*#__PURE__*/React.createElement("stop", {
-      offset: "0",
-      stopColor: "#7c2d3a"
-    }), /*#__PURE__*/React.createElement("stop", {
-      offset: "1",
-      stopColor: "#c9a35a"
-    }))), FLAME_BACK.map((t, idx) => /*#__PURE__*/React.createElement("path", {
-      key: 'w' + idx,
-      d: FLAME_PETAL,
-      fill: 'url(#' + g + ')',
-      transform: tongueTransform(t)
-    }))));
+    }, /*#__PURE__*/React.createElement("img", {
+      src: "./flame.png",
+      alt: "",
+      draggable: "false",
+      className: "flame-img breathe",
+      style: {
+        width: '100%',
+        height: 'auto',
+        display: 'block'
+      }
+    }));
   }
   function Loader({
     label,
