@@ -120,7 +120,7 @@
       .promesse-card:hover,.don-card:hover{transform:translateY(-2px);
         border-color:#d4b878;box-shadow:0 10px 28px rgba(184,146,74,.16),0 2px 6px rgba(124,45,58,.08);}
     }
-    .promesse-card{cursor:pointer;}
+    .promesse-card{cursor:pointer;position:relative;z-index:1;}
     @media(min-width:768px){.promesse-card{cursor:default;}}
     .don-card{padding:14px 16px;}
     .cards-grid{display:grid;grid-template-columns:1fr;gap:14px;}
@@ -177,7 +177,7 @@
     /* ---- swipe ---- */
     .swipe-wrap{position:relative;border-radius:1rem;overflow:hidden;}
     .swipe-bg{position:absolute;inset:0;display:flex;align-items:center;gap:8px;padding:0 24px;
-      font-size:14px;font-weight:600;border-radius:1rem;transition:opacity .15s ease;}
+      font-size:14px;font-weight:600;border-radius:1rem;transition:opacity .15s ease;pointer-events:none;}
     .swipe-bg-left{background:#5a7a4f;color:#faf6ef;justify-content:flex-start;}
     .swipe-bg-right{background:#d97706;color:#faf6ef;justify-content:flex-end;}
 
@@ -1956,14 +1956,20 @@
     onOpenSheet
   }) {
     const [query, setQuery] = useState('');
+    const [filter, setFilter] = useState('tous');
     const [limit, setLimit] = useState(50);
+    useEffect(() => {
+      setLimit(50);
+    }, [query, filter]);
+    const aEnvoyerCount = useMemo(() => donations.filter(d => d.statut === 'paye' && !d.cerfa_envoye).length, [donations]);
     const all = useMemo(() => {
       let arr = donations.filter(d => d.statut === 'paye');
+      if (filter === 'a_envoyer') arr = arr.filter(d => !d.cerfa_envoye);else if (filter === 'envoye') arr = arr.filter(d => d.cerfa_envoye);
       const q = query.trim().toLowerCase();
       if (q) arr = arr.filter(d => (d.nom_donateur || '').toLowerCase().includes(q));
       arr = arr.slice().sort((a, b) => new Date(b.date_paiement || b.date_creation) - new Date(a.date_paiement || a.date_creation));
       return arr;
-    }, [donations, query]);
+    }, [donations, query, filter]);
     const shown = all.slice(0, limit);
     const totalShown = all.reduce((s, d) => s + (Number(d.montant) || 0), 0);
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
@@ -1979,7 +1985,7 @@
     }), " ", /*#__PURE__*/React.createElement("span", {
       className: "hidden sm:inline"
     }, "Exporter"), " CSV")), /*#__PURE__*/React.createElement("div", {
-      className: "relative mb-4"
+      className: "relative mb-3"
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "search",
       size: 18,
@@ -1990,7 +1996,18 @@
       value: query,
       onChange: e => setQuery(e.target.value),
       "data-search-input": true
-    })), /*#__PURE__*/React.createElement(MonthlyBreakdown, {
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "chip-row"
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => setFilter('tous'),
+      className: cx('chip', filter === 'tous' && 'chip-active')
+    }, "Tous"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setFilter('a_envoyer'),
+      className: cx('chip', filter === 'a_envoyer' && 'chip-active')
+    }, "CERFA \xE0 envoyer", aEnvoyerCount > 0 ? ' (' + aEnvoyerCount + ')' : ''), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setFilter('envoye'),
+      className: cx('chip', filter === 'envoye' && 'chip-active')
+    }, "CERFA envoy\xE9")), /*#__PURE__*/React.createElement(MonthlyBreakdown, {
       donations: donations
     }), all.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
       icon: "banknote",
