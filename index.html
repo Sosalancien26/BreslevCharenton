@@ -983,7 +983,8 @@
       moyen_paiement: '',
       notes: '',
       paye: false,
-      cerfa_envoye: false
+      cerfa_envoye: false,
+      date_paiement: ''
     };
     const [form, setForm] = useState(blank);
     const [cerfaFile, setCerfaFile] = useState(null);
@@ -1003,7 +1004,8 @@
           moyen_paiement: editing.moyen_paiement || '',
           notes: editing.notes || '',
           paye: editing.statut === 'paye',
-          cerfa_envoye: !!editing.cerfa_envoye
+          cerfa_envoye: !!editing.cerfa_envoye,
+          date_paiement: editing.date_paiement ? editing.date_paiement.slice(0, 10) : ''
         });
         setExistingCerfa(editing.cerfa_path || null);
       } else {
@@ -1064,15 +1066,17 @@
       };
       if (form.cerfa_envoye && (!editing || !editing.cerfa_envoye)) payload.cerfa_date = nowISO;
       if (!form.cerfa_envoye) payload.cerfa_date = null;
+      if (form.paye) {
+        payload.date_paiement = form.date_paiement ? new Date(form.date_paiement + 'T12:00:00').toISOString() : nowISO;
+      } else {
+        payload.date_paiement = null;
+      }
       setLoading(true);
       let result;
       if (editing) {
-        if (form.paye && editing.statut !== 'paye') payload.date_paiement = nowISO;
-        if (!form.paye && editing.statut === 'paye') payload.date_paiement = null;
         result = await sb.from('donations').update(payload).eq('id', editing.id).select().single();
       } else {
         payload.created_by = userId;
-        if (form.paye) payload.date_paiement = nowISO;
         result = await sb.from('donations').insert(payload).select().single();
       }
       if (result.error) {
@@ -1220,7 +1224,10 @@
       onChange: e => set('notes', e.target.value)
     })), /*#__PURE__*/React.createElement("button", {
       type: "button",
-      onClick: () => set('paye', !form.paye),
+      onClick: () => setForm(f => Object.assign({}, f, {
+        paye: !f.paye,
+        date_paiement: !f.paye && !f.date_paiement ? todayISO() : f.date_paiement
+      })),
       className: cx('w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3.5 border tappable transition', form.paye ? 'bg-sage/10 border-sage/50' : 'bg-white border-gold-light/60')
     }, /*#__PURE__*/React.createElement("span", {
       className: "flex items-center gap-2.5"
@@ -1234,7 +1241,16 @@
       className: cx('toggle', form.paye && 'toggle-on')
     }, /*#__PURE__*/React.createElement("span", {
       className: "toggle-knob"
-    }))), /*#__PURE__*/React.createElement("div", {
+    }))), form.paye && /*#__PURE__*/React.createElement(Field, {
+      label: "Date du paiement",
+      hint: "Utilis\xE9e pour le r\xE9capitulatif mensuel des dons re\xE7us."
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "date",
+      className: inputClass,
+      value: form.date_paiement,
+      max: todayISO(),
+      onChange: e => set('date_paiement', e.target.value)
+    })), /*#__PURE__*/React.createElement("div", {
       className: "rounded-xl border border-gold-light/60 bg-white p-4 space-y-3"
     }, /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2"
@@ -1849,6 +1865,89 @@
   }
 
   /* ====================== VUE DONS REÇUS ====================== */
+  /* ====================== DONS REÇUS PAR MOIS ====================== */
+  function MonthlyBreakdown({
+    donations
+  }) {
+    const [open, setOpen] = useState(false);
+    const years = useMemo(() => {
+      const map = {};
+      donations.forEach(d => {
+        if (d.statut !== 'paye') return;
+        const ref = d.date_paiement || d.date_creation;
+        const dt = new Date(ref);
+        if (isNaN(dt.getTime())) return;
+        const y = dt.getFullYear();
+        const m = dt.getMonth();
+        const ym = y + '-' + String(m + 1).padStart(2, '0');
+        if (!map[ym]) map[ym] = {
+          ym: ym,
+          year: y,
+          month: m,
+          count: 0,
+          total: 0
+        };
+        map[ym].count += 1;
+        map[ym].total += Number(d.montant) || 0;
+      });
+      const months = Object.keys(map).map(k => map[k]).sort((a, b) => b.ym.localeCompare(a.ym));
+      const byYear = {};
+      months.forEach(mo => {
+        if (!byYear[mo.year]) byYear[mo.year] = {
+          year: mo.year,
+          count: 0,
+          total: 0,
+          months: []
+        };
+        byYear[mo.year].count += mo.count;
+        byYear[mo.year].total += mo.total;
+        byYear[mo.year].months.push(mo);
+      });
+      return Object.keys(byYear).map(k => byYear[k]).sort((a, b) => b.year - a.year);
+    }, [donations]);
+    if (years.length === 0) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "mb-4"
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => setOpen(v => !v),
+      className: "w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-surface border border-gold-light/45 card-shadow tappable"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "flex items-center gap-2 text-sm font-medium text-ink"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "calendar",
+      size: 17,
+      className: "text-gold-dark"
+    }), "Dons re\xE7us par mois"), /*#__PURE__*/React.createElement(Icon, {
+      name: open ? 'chevron-down' : 'chevron-right',
+      size: 18,
+      className: "text-ink-soft"
+    })), open && /*#__PURE__*/React.createElement("div", {
+      className: "mt-2 rounded-xl bg-surface border border-gold-light/45 overflow-hidden card-shadow"
+    }, years.map(yr => /*#__PURE__*/React.createElement("div", {
+      key: yr.year
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-between gap-3 px-4 py-2.5 bg-cream/70 border-b border-gold-light/35"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "font-serif text-base text-ink"
+    }, yr.year), /*#__PURE__*/React.createElement("span", {
+      className: "text-sm text-ink-soft"
+    }, yr.count, " ", yr.count > 1 ? 'dons' : 'don', ' · ', /*#__PURE__*/React.createElement("span", {
+      className: "font-serif text-sage"
+    }, formatEuro(yr.total)))), yr.months.map((mo, i) => /*#__PURE__*/React.createElement("div", {
+      key: mo.ym,
+      className: cx('flex items-center justify-between gap-3 px-4 py-2.5', i > 0 && 'border-t border-gold-light/25')
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-sm text-ink capitalize"
+    }, formatDate(new Date(mo.year, mo.month, 1), {
+      month: 'long'
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "text-right whitespace-nowrap"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-xs text-ink-soft"
+    }, mo.count, " \xB7 "), /*#__PURE__*/React.createElement("span", {
+      className: "font-serif text-ink"
+    }, formatEuro(mo.total)))))))));
+  }
   function DonsView({
     donations,
     isMobile,
@@ -1891,7 +1990,9 @@
       value: query,
       onChange: e => setQuery(e.target.value),
       "data-search-input": true
-    })), all.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
+    })), /*#__PURE__*/React.createElement(MonthlyBreakdown, {
+      donations: donations
+    }), all.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
       icon: "banknote",
       title: "Aucun don re\xE7u pour l'instant",
       text: "Les promesses honor\xE9es appara\xEEtront ici."
