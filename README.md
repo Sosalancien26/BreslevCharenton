@@ -31,6 +31,14 @@ automatiquement. Deux personnes du même nom doivent être distinguées.
 - **Historique des relances** — chaque relance est datée et comptée
 - **Journal d'audit** (super admin) — qui a ajouté, modifié, supprimé un don,
   qui a validé un paiement, qui a créé ou modifié un compte
+- **Saisie assistée** — autocomplétion du nom du donateur (avec reprise du
+  téléphone et de l'email), montants rapides, « enregistrer et en ajouter un
+  autre », « nouveau don pour ce donateur »
+- **Recherche et tri** — recherche par nom, téléphone ou motif ; tri par date,
+  montant ou nom sur chaque liste
+- **Onglet Bilan** — total de l'année comparé à l'an dernier, don moyen,
+  graphique mois par mois, donateurs les plus généreux, répartition par moyen
+  de paiement et par motif, historique mensuel toutes années
 - **Export CSV** — promesses et dons, compatible Excel
 - **Pagination** — listes paginées (50 par page) pour rester fluide à grande échelle
 - **PWA** — installable et utilisable comme une vraie application

@@ -92,6 +92,26 @@
     @keyframes spin{to{transform:rotate(360deg);}}
     .spin svg{animation:spin .8s linear infinite;}
 
+    /* ---- autocomplétion du donateur ---- */
+    .suggest-box{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;background:#fffdf8;
+      border:1px solid rgba(212,184,120,.7);border-radius:.8rem;overflow:hidden;
+      box-shadow:0 12px 30px rgba(124,45,58,.18);}
+    .suggest-item{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:11px 14px;text-align:left;border-bottom:1px solid rgba(212,184,120,.25);}
+    .suggest-item:last-child{border-bottom:none;}
+    .suggest-item:active{background:rgba(184,146,74,.14);}
+    @media(hover:hover){.suggest-item:hover{background:rgba(184,146,74,.1);}}
+
+    /* ---- sélecteur de tri ---- */
+    .sort-select{appearance:none;-webkit-appearance:none;background:#fffdf8;
+      border:1px solid rgba(212,184,120,.6);border-radius:.7rem;padding:7px 26px 7px 12px;
+      font-size:13px;color:#5a5a6e;outline:none;max-width:235px;}
+
+    /* ---- barres de statistiques ---- */
+    .stat-bar{height:6px;border-radius:999px;background:rgba(184,146,74,.15);margin-top:6px;overflow:hidden;}
+    .stat-bar>span{display:block;height:100%;border-radius:999px;
+      background:linear-gradient(90deg,#b8924a,#d4b878);}
+
     .flame-img{object-fit:contain;display:block;-webkit-user-drag:none;user-select:none;}
     .watermark-text{text-align:center;font-family:'Fraunces',serif;font-style:italic;
       color:#1a2238;opacity:.18;font-size:22px;padding:26px 0 14px;letter-spacing:.04em;}
@@ -431,6 +451,17 @@
   }
   function nameToEmail(name) {
     return slugifyName(name) + '@synagogue-charenton.fr';
+  }
+  function matchDonation(d, q) {
+    if (!q) return true;
+    if ((d.nom_donateur || '').toLowerCase().indexOf(q) !== -1) return true;
+    if ((d.motif || '').toLowerCase().indexOf(q) !== -1) return true;
+    const digits = q.replace(/\D/g, '');
+    if (digits.length >= 3) {
+      const tel = (d.telephone || '').replace(/\D/g, '');
+      if (tel && tel.indexOf(digits) !== -1) return true;
+    }
+    return false;
   }
   function telHref(phone) {
     return 'tel:' + (phone || '').replace(/\s/g, '');
@@ -970,6 +1001,8 @@
     onClose,
     onSaved,
     editing,
+    prefill,
+    donations,
     userId,
     isMobile
   }) {
@@ -991,7 +1024,34 @@
     const [existingCerfa, setExistingCerfa] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [suggestOpen, setSuggestOpen] = useState(false);
     const fileRef = useRef(null);
+
+    // Donateurs déjà connus, proposés à la saisie
+    const donorSuggestions = useMemo(() => {
+      if (!suggestOpen || editing) return [];
+      const q = (form.nom_donateur || '').trim().toLowerCase();
+      if (q.length < 2) return [];
+      const map = {};
+      (donations || []).forEach(d => {
+        const nom = (d.nom_donateur || '').trim();
+        if (!nom) return;
+        const key = nom.toLowerCase();
+        if (key === q || key.indexOf(q) === -1) return;
+        if (!map[key]) map[key] = {
+          nom: nom,
+          telephone: '',
+          email: '',
+          count: 0,
+          total: 0
+        };
+        map[key].count += 1;
+        map[key].total += Number(d.montant) || 0;
+        if (!map[key].telephone && d.telephone) map[key].telephone = d.telephone;
+        if (!map[key].email && d.email) map[key].email = d.email;
+      });
+      return Object.keys(map).map(k => map[k]).sort((a, b) => b.count - a.count).slice(0, 5);
+    }, [donations, form.nom_donateur, suggestOpen, editing]);
     useEffect(() => {
       if (!open) return;
       if (editing) {
@@ -1009,12 +1069,13 @@
         });
         setExistingCerfa(editing.cerfa_path || null);
       } else {
-        setForm(blank);
+        setForm(Object.assign({}, blank, prefill || {}));
         setExistingCerfa(null);
       }
       setCerfaFile(null);
+      setSuggestOpen(false);
       setError('');
-    }, [open, editing]);
+    }, [open, editing, prefill]);
     const set = (k, v) => setForm(f => Object.assign({}, f, {
       [k]: v
     }));
@@ -1162,13 +1223,37 @@
     }, /*#__PURE__*/React.createElement(Field, {
       label: "Nom du donateur",
       required: true
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "relative"
     }, /*#__PURE__*/React.createElement("input", {
       className: inputClass,
       value: form.nom_donateur,
       autoFocus: !isMobile,
-      onChange: e => set('nom_donateur', e.target.value),
-      placeholder: "Pr\xE9nom et nom"
-    })), /*#__PURE__*/React.createElement("div", {
+      autoComplete: "off",
+      placeholder: "Pr\xE9nom et nom",
+      onChange: e => {
+        set('nom_donateur', e.target.value);
+        setSuggestOpen(true);
+      }
+    }), donorSuggestions.length > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "suggest-box"
+    }, donorSuggestions.map(s => /*#__PURE__*/React.createElement("button", {
+      key: s.nom,
+      type: "button",
+      className: "suggest-item",
+      onClick: () => {
+        setForm(f => Object.assign({}, f, {
+          nom_donateur: s.nom,
+          telephone: f.telephone || s.telephone || '',
+          email: f.email || s.email || ''
+        }));
+        setSuggestOpen(false);
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "font-medium text-ink truncate"
+    }, s.nom), /*#__PURE__*/React.createElement("span", {
+      className: "text-xs text-ink-soft shrink-0"
+    }, s.count, " don", s.count > 1 ? 's' : '', " \xB7 ", formatEuro(s.total))))))), /*#__PURE__*/React.createElement("div", {
       className: "grid grid-cols-1 sm:grid-cols-2 gap-4"
     }, /*#__PURE__*/React.createElement(Field, {
       label: "T\xE9l\xE9phone"
@@ -1203,6 +1288,13 @@
     }), /*#__PURE__*/React.createElement("span", {
       className: "absolute right-4 top-1/2 -translate-y-1/2 font-serif text-2xl text-gold pointer-events-none"
     }, "\u20AC"))), /*#__PURE__*/React.createElement("div", {
+      className: "chip-row -mt-2"
+    }, [18, 36, 54, 100, 180, 360].map(m => /*#__PURE__*/React.createElement("button", {
+      key: m,
+      type: "button",
+      onClick: () => set('montant', String(m)),
+      className: cx('chip', String(form.montant).trim() === String(m) && 'chip-active')
+    }, m, " \u20AC"))), /*#__PURE__*/React.createElement("div", {
       className: "grid grid-cols-1 sm:grid-cols-2 gap-4"
     }, /*#__PURE__*/React.createElement(Field, {
       label: "Motif"
@@ -1626,7 +1718,11 @@
       className: "font-serif text-lg text-sage shrink-0"
     }, formatEuro(donation.montant)), !isMobile && /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-1 pl-1"
-    }, donation.cerfa_path && /*#__PURE__*/React.createElement(CardBtn, {
+    }, /*#__PURE__*/React.createElement(CardBtn, {
+      icon: "plus",
+      label: "Nouveau don pour ce donateur",
+      onClick: () => onAction('newdon', donation)
+    }), donation.cerfa_path && /*#__PURE__*/React.createElement(CardBtn, {
       icon: "file-text",
       label: "Voir le re\xE7u CERFA",
       onClick: () => onAction('cerfa', donation)
@@ -1794,6 +1890,28 @@
   }
 
   /* ====================== VUE PROMESSES ====================== */
+  function SortSelect({
+    value,
+    onChange,
+    options
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-end -mt-1 mb-3"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "relative"
+    }, /*#__PURE__*/React.createElement("select", {
+      value: value,
+      onChange: e => onChange(e.target.value),
+      className: "sort-select"
+    }, options.map(o => /*#__PURE__*/React.createElement("option", {
+      key: o.k,
+      value: o.k
+    }, o.label))), /*#__PURE__*/React.createElement(Icon, {
+      name: "chevron-down",
+      size: 14,
+      className: "absolute right-2 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none"
+    })));
+  }
   function PromessesView({
     donations,
     isMobile,
@@ -1804,18 +1922,24 @@
   }) {
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('tous');
+    const [sort, setSort] = useState('ancien');
     const [limit, setLimit] = useState(50);
     useEffect(() => {
       setLimit(50);
-    }, [query, filter]);
+    }, [query, filter, sort]);
     const list = useMemo(() => {
       let arr = donations.filter(d => d.statut === 'promesse');
       const q = query.trim().toLowerCase();
-      if (q) arr = arr.filter(d => (d.nom_donateur || '').toLowerCase().includes(q));
+      if (q) arr = arr.filter(d => matchDonation(d, q));
       if (filter === 'jamais') arr = arr.filter(d => !d.date_relance);else if (filter === '7') arr = arr.filter(d => daysSince(d.date_creation) > 7);else if (filter === '30') arr = arr.filter(d => daysSince(d.date_creation) > 30);
-      arr = arr.slice().sort((a, b) => new Date(a.date_creation) - new Date(b.date_creation));
+      arr = arr.slice().sort((a, b) => {
+        if (sort === 'recent') return new Date(b.date_creation) - new Date(a.date_creation);
+        if (sort === 'montant') return (Number(b.montant) || 0) - (Number(a.montant) || 0);
+        if (sort === 'nom') return (a.nom_donateur || '').localeCompare(b.nom_donateur || '', 'fr');
+        return new Date(a.date_creation) - new Date(b.date_creation);
+      });
       return arr;
-    }, [donations, query, filter]);
+    }, [donations, query, filter, sort]);
     const totalProm = donations.filter(d => d.statut === 'promesse').reduce((s, d) => s + (Number(d.montant) || 0), 0);
     const chips = [{
       k: 'tous',
@@ -1851,7 +1975,7 @@
     }), /*#__PURE__*/React.createElement("input", {
       ref: searchRef,
       className: inputClass + ' pl-11',
-      placeholder: "Rechercher un donateur\u2026",
+      placeholder: "Rechercher un nom ou un t\xE9l\xE9phone\u2026",
       value: query,
       onChange: e => setQuery(e.target.value),
       "data-search-input": true
@@ -1861,7 +1985,23 @@
       key: c.k,
       onClick: () => setFilter(c.k),
       className: cx('chip', filter === c.k && 'chip-active')
-    }, c.label))), list.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
+    }, c.label))), /*#__PURE__*/React.createElement(SortSelect, {
+      value: sort,
+      onChange: setSort,
+      options: [{
+        k: 'ancien',
+        label: 'Les plus anciennes'
+      }, {
+        k: 'recent',
+        label: 'Les plus récentes'
+      }, {
+        k: 'montant',
+        label: 'Montant décroissant'
+      }, {
+        k: 'nom',
+        label: 'Nom (A → Z)'
+      }]
+    }), list.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
       icon: "sparkles",
       title: query || filter !== 'tous' ? 'Aucune promesse trouvée' : 'Aucune promesse en attente',
       text: query || filter !== 'tous' ? 'Essayez de modifier votre recherche ou vos filtres.' : 'Toutes les promesses ont été honorées. Qu\'il en soit ainsi.'
@@ -1979,19 +2119,25 @@
   }) {
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('tous');
+    const [sort, setSort] = useState('recent');
     const [limit, setLimit] = useState(50);
     useEffect(() => {
       setLimit(50);
-    }, [query, filter]);
+    }, [query, filter, sort]);
     const aEnvoyerCount = useMemo(() => donations.filter(d => d.statut === 'paye' && !d.cerfa_envoye).length, [donations]);
     const all = useMemo(() => {
       let arr = donations.filter(d => d.statut === 'paye');
       if (filter === 'a_envoyer') arr = arr.filter(d => !d.cerfa_envoye);else if (filter === 'envoye') arr = arr.filter(d => d.cerfa_envoye);
       const q = query.trim().toLowerCase();
-      if (q) arr = arr.filter(d => (d.nom_donateur || '').toLowerCase().includes(q));
-      arr = arr.slice().sort((a, b) => new Date(b.date_paiement || b.date_creation) - new Date(a.date_paiement || a.date_creation));
+      if (q) arr = arr.filter(d => matchDonation(d, q));
+      arr = arr.slice().sort((a, b) => {
+        if (sort === 'ancien') return new Date(a.date_paiement || a.date_creation) - new Date(b.date_paiement || b.date_creation);
+        if (sort === 'montant') return (Number(b.montant) || 0) - (Number(a.montant) || 0);
+        if (sort === 'nom') return (a.nom_donateur || '').localeCompare(b.nom_donateur || '', 'fr');
+        return new Date(b.date_paiement || b.date_creation) - new Date(a.date_paiement || a.date_creation);
+      });
       return arr;
-    }, [donations, query, filter]);
+    }, [donations, query, filter, sort]);
     const shown = all.slice(0, limit);
     const totalShown = all.reduce((s, d) => s + (Number(d.montant) || 0), 0);
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
@@ -2014,7 +2160,7 @@
       className: "absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-soft"
     }), /*#__PURE__*/React.createElement("input", {
       className: inputClass + ' pl-11',
-      placeholder: "Rechercher un donateur\u2026",
+      placeholder: "Rechercher un nom ou un t\xE9l\xE9phone\u2026",
       value: query,
       onChange: e => setQuery(e.target.value),
       "data-search-input": true
@@ -2029,8 +2175,22 @@
     }, "CERFA \xE0 envoyer", aEnvoyerCount > 0 ? ' (' + aEnvoyerCount + ')' : ''), /*#__PURE__*/React.createElement("button", {
       onClick: () => setFilter('envoye'),
       className: cx('chip', filter === 'envoye' && 'chip-active')
-    }, "CERFA envoy\xE9")), /*#__PURE__*/React.createElement(MonthlyBreakdown, {
-      donations: donations
+    }, "CERFA envoy\xE9")), /*#__PURE__*/React.createElement(SortSelect, {
+      value: sort,
+      onChange: setSort,
+      options: [{
+        k: 'recent',
+        label: 'Paiement le plus récent'
+      }, {
+        k: 'ancien',
+        label: 'Paiement le plus ancien'
+      }, {
+        k: 'montant',
+        label: 'Montant décroissant'
+      }, {
+        k: 'nom',
+        label: 'Nom (A → Z)'
+      }]
     }), all.length === 0 ? /*#__PURE__*/React.createElement(EmptyState, {
       icon: "banknote",
       title: "Aucun don re\xE7u pour l'instant",
@@ -2560,6 +2720,277 @@
     exportCSV(['Nom', 'Téléphone', 'Email', 'Montant (€)', 'Motif', 'Moyen de paiement', 'Date paiement', 'Date promesse initiale', 'CERFA envoyé', 'Date CERFA', 'Notes'], rows, 'synagogue-charenton-dons-' + todayISO() + '.csv');
   }
 
+  /* ====================== BILAN / STATISTIQUES ====================== */
+  const MOIS_COURTS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+  function StatList({
+    title,
+    icon,
+    rows,
+    numbered
+  }) {
+    if (!rows || rows.length === 0) return null;
+    const max = Math.max(1, ...rows.map(r => r.total));
+    return /*#__PURE__*/React.createElement("div", {
+      className: "card mb-4"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "text-sm font-medium text-ink mb-3 flex items-center gap-2"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: icon,
+      size: 16,
+      className: "text-gold-dark"
+    }), " ", title), /*#__PURE__*/React.createElement("div", {
+      className: "space-y-3"
+    }, rows.map((r, i) => /*#__PURE__*/React.createElement("div", {
+      key: r.label
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-between gap-3 text-sm"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-ink truncate min-w-0"
+    }, numbered ? /*#__PURE__*/React.createElement("span", {
+      className: "text-ink-soft mr-1.5"
+    }, i + 1, ".") : null, r.label), /*#__PURE__*/React.createElement("span", {
+      className: "shrink-0 font-serif text-ink"
+    }, formatEuro(r.total))), /*#__PURE__*/React.createElement("div", {
+      className: "stat-bar"
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: Math.max(3, Math.round(r.total / max * 100)) + '%'
+      }
+    })), r.sub ? /*#__PURE__*/React.createElement("p", {
+      className: "text-xs text-ink-soft mt-1"
+    }, r.sub) : null))));
+  }
+  function BilanView({
+    donations
+  }) {
+    const dons = useMemo(() => donations.filter(d => d.statut === 'paye'), [donations]);
+    const nowYear = new Date().getFullYear();
+    const years = useMemo(() => {
+      const set = {};
+      dons.forEach(d => {
+        const dt = new Date(d.date_paiement || d.date_creation);
+        if (!isNaN(dt.getTime())) set[dt.getFullYear()] = true;
+      });
+      set[nowYear] = true;
+      return Object.keys(set).map(Number).sort((a, b) => b - a);
+    }, [dons, nowYear]);
+    const [year, setYear] = useState(nowYear);
+    const [selMonth, setSelMonth] = useState(null);
+    const stats = useMemo(() => {
+      const byMonth = [];
+      for (let i = 0; i < 12; i++) byMonth.push({
+        month: i,
+        total: 0,
+        count: 0
+      });
+      let total = 0,
+        count = 0,
+        prevTotal = 0;
+      const byMotif = {},
+        byMoyen = {},
+        byDonateur = {};
+      dons.forEach(d => {
+        const dt = new Date(d.date_paiement || d.date_creation);
+        if (isNaN(dt.getTime())) return;
+        const y = dt.getFullYear();
+        const m = Number(d.montant) || 0;
+        if (y === year - 1) prevTotal += m;
+        if (y !== year) return;
+        total += m;
+        count += 1;
+        byMonth[dt.getMonth()].total += m;
+        byMonth[dt.getMonth()].count += 1;
+        const mo = d.motif || 'Sans motif';
+        byMotif[mo] = (byMotif[mo] || 0) + m;
+        const mp = d.moyen_paiement || 'Non précisé';
+        byMoyen[mp] = (byMoyen[mp] || 0) + m;
+        const nom = (d.nom_donateur || '').trim() || '—';
+        if (!byDonateur[nom]) byDonateur[nom] = {
+          nom: nom,
+          total: 0,
+          count: 0
+        };
+        byDonateur[nom].total += m;
+        byDonateur[nom].count += 1;
+      });
+      const toList = obj => Object.keys(obj).map(k => ({
+        label: k,
+        total: obj[k]
+      })).sort((a, b) => b.total - a.total);
+      return {
+        total: total,
+        count: count,
+        moyenne: count ? total / count : 0,
+        prevTotal: prevTotal,
+        byMonth: byMonth,
+        motifs: toList(byMotif),
+        moyens: toList(byMoyen),
+        top: Object.keys(byDonateur).map(k => byDonateur[k]).sort((a, b) => b.total - a.total).slice(0, 10)
+      };
+    }, [dons, year]);
+    const promesses = useMemo(() => {
+      const arr = donations.filter(d => d.statut === 'promesse');
+      return {
+        count: arr.length,
+        total: arr.reduce((s, d) => s + (Number(d.montant) || 0), 0)
+      };
+    }, [donations]);
+    if (donations.length === 0) {
+      return /*#__PURE__*/React.createElement(EmptyState, {
+        icon: "trending-up",
+        title: "Pas encore de bilan",
+        text: "Les statistiques s'afficheront d\xE8s les premiers dons enregistr\xE9s."
+      });
+    }
+    const evolution = stats.prevTotal > 0 ? Math.round((stats.total - stats.prevTotal) / stats.prevTotal * 100) : null;
+    const maxMonth = Math.max(1, ...stats.byMonth.map(m => m.total));
+    const sel = selMonth != null ? stats.byMonth[selMonth] : null;
+    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center justify-between gap-3 mb-4"
+    }, /*#__PURE__*/React.createElement("h2", {
+      className: "font-serif text-xl text-ink"
+    }, "Bilan ", year), /*#__PURE__*/React.createElement("div", {
+      className: "relative"
+    }, /*#__PURE__*/React.createElement("select", {
+      value: year,
+      className: "sort-select",
+      onChange: e => {
+        setYear(Number(e.target.value));
+        setSelMonth(null);
+      }
+    }, years.map(y => /*#__PURE__*/React.createElement("option", {
+      key: y,
+      value: y
+    }, y))), /*#__PURE__*/React.createElement(Icon, {
+      name: "chevron-down",
+      size: 14,
+      className: "absolute right-2 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none"
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "kpi-grid mb-4"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "kpi-card"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "kpi-head"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "kpi-icon bg-sage/12 text-sage"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "banknote",
+      size: 20
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "kpi-label"
+    }, "Re\xE7u en ", year)), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-value text-sage"
+    }, formatEuro(stats.total)), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-sub"
+    }, stats.count, " don", stats.count > 1 ? 's' : '', evolution !== null ? /*#__PURE__*/React.createElement("span", {
+      className: evolution >= 0 ? 'text-sage' : 'text-terracotta'
+    }, ' · ', evolution >= 0 ? '+' : '', evolution, "% vs ", year - 1) : null)), /*#__PURE__*/React.createElement("div", {
+      className: "kpi-card"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "kpi-head"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "kpi-icon bg-gold/15 text-gold-dark"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "coins",
+      size: 20
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "kpi-label"
+    }, "Don moyen")), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-value text-ink"
+    }, formatEuro(stats.moyenne)), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-sub"
+    }, "sur l'ann\xE9e ", year)), /*#__PURE__*/React.createElement("div", {
+      className: "kpi-card kpi-card-feature"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "kpi-head"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "kpi-icon bg-amber/15 text-amber"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "scroll-text",
+      size: 20
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "kpi-label"
+    }, "Promesses en cours")), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-value text-amber"
+    }, formatEuro(promesses.total)), /*#__PURE__*/React.createElement("p", {
+      className: "kpi-sub"
+    }, promesses.count, " \xE0 honorer, toutes ann\xE9es"))), /*#__PURE__*/React.createElement("div", {
+      className: "card mb-4"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "text-sm font-medium text-ink mb-1"
+    }, "Mois par mois"), /*#__PURE__*/React.createElement("p", {
+      className: "text-xs text-ink-soft mb-3",
+      style: {
+        minHeight: '18px'
+      }
+    }, sel && sel.count > 0 ? formatDate(new Date(year, sel.month, 1), {
+      month: 'long'
+    }) + ' : ' + formatEuro(sel.total) + ' · ' + sel.count + ' don' + (sel.count > 1 ? 's' : '') : 'Touchez une barre pour voir le détail du mois.'), /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 336 142",
+      width: "100%",
+      style: {
+        display: 'block'
+      },
+      "aria-label": "Dons par mois"
+    }, stats.byMonth.map((m, i) => {
+      const bw = 28;
+      const h = m.total > 0 ? Math.max(5, m.total / maxMonth * 106) : 0;
+      const x = i * bw;
+      return /*#__PURE__*/React.createElement("g", {
+        key: i,
+        onClick: () => setSelMonth(selMonth === i ? null : i),
+        style: {
+          cursor: 'pointer'
+        }
+      }, /*#__PURE__*/React.createElement("rect", {
+        x: x,
+        y: "0",
+        width: bw,
+        height: "142",
+        fill: "transparent"
+      }), h > 0 ? /*#__PURE__*/React.createElement("rect", {
+        x: x + 4,
+        y: 114 - h,
+        width: bw - 8,
+        height: h,
+        rx: "3",
+        fill: selMonth === i ? '#7c2d3a' : '#c9a35a'
+      }) : /*#__PURE__*/React.createElement("rect", {
+        x: x + 4,
+        y: "110",
+        width: bw - 8,
+        height: "4",
+        rx: "2",
+        fill: "#e8dfcb"
+      }), /*#__PURE__*/React.createElement("text", {
+        x: x + bw / 2,
+        y: "132",
+        textAnchor: "middle",
+        fontSize: "11",
+        fill: selMonth === i ? '#7c2d3a' : '#5a5a6e'
+      }, MOIS_COURTS[i]));
+    }))), /*#__PURE__*/React.createElement(StatList, {
+      title: 'Donateurs les plus généreux en ' + year,
+      icon: "users",
+      numbered: true,
+      rows: stats.top.map(t => ({
+        label: t.nom,
+        total: t.total,
+        sub: t.count + ' don' + (t.count > 1 ? 's' : '')
+      }))
+    }), /*#__PURE__*/React.createElement(StatList, {
+      title: 'Par moyen de paiement — ' + year,
+      icon: "credit-card",
+      rows: stats.moyens
+    }), /*#__PURE__*/React.createElement(StatList, {
+      title: 'Par motif — ' + year,
+      icon: "scroll-text",
+      rows: stats.motifs
+    }), /*#__PURE__*/React.createElement(MonthlyBreakdown, {
+      donations: donations
+    }));
+  }
+
   /* ====================== TABLEAU DE BORD ====================== */
   function Dashboard({
     session,
@@ -2675,6 +3106,18 @@
         });
         return;
       }
+      if (action === 'newdon') {
+        setDonationModal({
+          open: true,
+          editing: null,
+          prefill: {
+            nom_donateur: donation.nom_donateur || '',
+            telephone: donation.telephone || '',
+            email: donation.email || ''
+          }
+        });
+        return;
+      }
       if (action === 'sms') {
         window.location.href = buildSmsHref(donation);
         return;
@@ -2786,6 +3229,11 @@
       label: 'Copier le téléphone',
       run: () => handleAction('copy', d)
     }, {
+      key: 'newdon',
+      icon: 'plus',
+      label: 'Nouveau don pour ce donateur',
+      run: () => handleAction('newdon', d)
+    }, {
       key: 'edit',
       icon: 'pencil',
       label: 'Modifier',
@@ -2802,6 +3250,11 @@
       icon: 'file-text',
       label: 'Voir le reçu CERFA',
       run: () => handleAction('cerfa', d)
+    }, {
+      key: 'newdon',
+      icon: 'plus',
+      label: 'Nouveau don pour ce donateur',
+      run: () => handleAction('newdon', d)
     }, {
       key: 'edit',
       icon: 'pencil',
@@ -2850,11 +3303,15 @@
       k: 'dons',
       label: 'Dons',
       icon: 'banknote'
+    }, {
+      k: 'bilan',
+      label: 'Bilan',
+      icon: 'trending-up'
     }];
     if (isAdmin) {
       tabs.push({
         k: 'users',
-        label: 'Utilisateurs',
+        label: 'Comptes',
         icon: 'users'
       });
       tabs.push({
@@ -2892,7 +3349,7 @@
       size: 17
     }), " ", t.label))), /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2 ml-auto"
-    }, isTablet && tab !== 'users' && tab !== 'journal' && /*#__PURE__*/React.createElement("button", {
+    }, isTablet && (tab === 'promesses' || tab === 'dons') && /*#__PURE__*/React.createElement("button", {
       onClick: () => setDonationModal({
         open: true,
         editing: null
@@ -2934,8 +3391,6 @@
       className: "mb-5"
     }, /*#__PURE__*/React.createElement(KpiCards, {
       donations: donations
-    }), /*#__PURE__*/React.createElement(MotifBreakdown, {
-      donations: donations
     })), loading ? /*#__PURE__*/React.createElement(Loader, {
       label: "Ouverture du registre\u2026"
     }) : /*#__PURE__*/React.createElement(React.Fragment, null, tab === 'promesses' && /*#__PURE__*/React.createElement(PromessesView, {
@@ -2957,6 +3412,8 @@
         donation: d,
         kind: 'don'
       })
+    }), tab === 'bilan' && /*#__PURE__*/React.createElement(BilanView, {
+      donations: donations
     }), tab === 'users' && isAdmin && /*#__PURE__*/React.createElement(UsersView, {
       profiles: profiles,
       loading: profilesLoading,
@@ -3067,7 +3524,7 @@
       entries: auditLog,
       loading: auditLoading,
       onReload: loadAuditLog
-    })))), isMobile && tab !== 'users' && tab !== 'journal' && /*#__PURE__*/React.createElement("button", {
+    })))), isMobile && (tab === 'promesses' || tab === 'dons') && /*#__PURE__*/React.createElement("button", {
       onClick: () => setDonationModal({
         open: true,
         editing: null
@@ -3090,11 +3547,14 @@
     }), /*#__PURE__*/React.createElement("span", null, t.label)))), /*#__PURE__*/React.createElement(DonationModal, {
       open: donationModal.open,
       editing: donationModal.editing,
+      prefill: donationModal.prefill,
+      donations: donations,
       isMobile: isMobile,
       userId: session.user.id,
       onClose: () => setDonationModal({
         open: false,
-        editing: null
+        editing: null,
+        prefill: null
       }),
       onSaved: (record, type, justPaid) => {
         upsertLocal(record, type);
